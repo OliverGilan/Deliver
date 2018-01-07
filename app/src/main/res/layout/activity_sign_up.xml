@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.olivergilan.deliver.SignUp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="8dp">
+
+        <TextView
+            android:id="@+id/signUpLabel"
+            android:layout_width="64dp"
+            android:layout_height="30dp"
+            android:layout_centerHorizontal="true"
+            android:text="Sign Up"
+            android:textAlignment="center"
+            android:textSize="18dp"
+            tools:layout_editor_absoluteX="60dp"
+            tools:layout_editor_absoluteY="16dp"
+            tools:text="Sign Up" />
+
+        <EditText
+            android:id="@+id/name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/signUpLabel"
+            android:layout_centerHorizontal="true"
+            android:ems="10"
+            android:hint="Name"
+            android:singleLine="true"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            tools:layout_editor_absoluteX="85dp"
+            tools:layout_editor_absoluteY="61dp" />
+
+        <EditText
+            android:id="@+id/emailCreate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/name"
+            android:layout_centerHorizontal="true"
+            android:ems="10"
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            android:singleLine="true"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            tools:layout_editor_absoluteX="85dp"
+            tools:layout_editor_absoluteY="61dp" />
+
+        <EditText
+            android:id="@+id/passwordCreate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/emailCreate"
+            android:layout_centerHorizontal="true"
+            android:ems="10"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:singleLine="true"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            tools:layout_editor_absoluteX="85dp"
+            tools:layout_editor_absoluteY="107dp" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="64dp"
+            android:layout_height="30dp"
+            android:layout_below="@+id/passwordCreate"
+            android:layout_centerHorizontal="true"
+            android:text="---or---"
+            android:textAlignment="center"
+            android:textSize="18dp"
+            tools:layout_editor_absoluteX="160dp"
+            tools:layout_editor_absoluteY="180dp"
+            tools:text="---or---" />
+
+        <ProgressBar
+            android:id="@+id/progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView2"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="200dp"
+            android:visibility="invisible"/>
+
+        <Button
+            android:id="@+id/signUpBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_margin="40dp"
+            android:text="Sign Up" />
+
+        <TextView
+            android:id="@+id/toLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="10dp"
+            android:text="Already have an account? Sign In" />
+    </RelativeLayout>
+</android.support.constraint.ConstraintLayout>
