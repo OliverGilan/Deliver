@@ -1,5 +1,8 @@
 package com.olivergilan.deliver;
 
+import android.app.LauncherActivity;
+import android.content.Intent;
+import android.content.IntentSender;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -48,7 +51,7 @@ public class ListItems extends AppCompatActivity {
                 TextView text2 = (TextView) view.findViewById(android.R.id.text2);
 
                 text1.setText(products.get(position).getName());
-                text2.setText(Double.toString(products.get(position).getCost()));
+                text2.setText("$" + Double.toString(products.get(position).getCost()));
                 return view;
             }
         };
@@ -76,10 +79,18 @@ public class ListItems extends AppCompatActivity {
             }
         });
 
+
         finishedBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                if(items.size() == 0){
+                    startActivity(new Intent(ListItems.this, MainActivity.class));
+                }else{
+                    Intent intent = new Intent(ListItems.this, MainActivity.class);
+                    intent.putExtra("items", items);
+                    intent.putExtra("cost", costs);
+                    startActivity(intent);
+                }
             }
         });
 

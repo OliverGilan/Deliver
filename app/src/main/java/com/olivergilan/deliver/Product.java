@@ -7,6 +7,7 @@ package com.olivergilan.deliver;
 public class Product {
 
     private String name;
+    private String description;
     private double cost;
 
     public Product(String nameIn, double costIn){

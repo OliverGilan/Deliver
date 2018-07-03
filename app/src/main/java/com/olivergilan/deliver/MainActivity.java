@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
     private EditText selectItems;
+    public boolean hasItems;
 
     GoogleMap map;
     Button logOutBtn;
@@ -152,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         MapStyleOptions style = MapStyleOptions.loadRawResourceStyle(this, R.raw.mapstyle_grayscale);
         map.setMapStyle(style);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -180,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     });
             createLocationRequest();
             mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-            //map.setMyLocationEnabled(true);
+            map.setMyLocationEnabled(true);
             //map.setOnMyLocationButtonClickListener(this);
             selectItems.setOnClickListener(new View.OnClickListener() {
                 @Override
