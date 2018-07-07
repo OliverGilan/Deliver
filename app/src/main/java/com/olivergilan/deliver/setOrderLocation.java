@@ -2,6 +2,7 @@ package com.olivergilan.deliver;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -48,11 +49,17 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import java.util.ArrayList;
+
 public class setOrderLocation extends AppCompatActivity implements OnMapReadyCallback {
 
     private LinearLayout confirmPanel;
     private Button confirmPickup, denyPickup, placeOrder;
     private Place pickupLocation;
+
+    private ArrayList<String> items;
+    private ArrayList<Product> products;
+    private ArrayList<Double> costs;
 
     /*
     *   Google Maps API Fragment declarations
@@ -76,6 +83,12 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_order_location);
+
+        Bundle bundle = this.getIntent().getExtras();
+        products = bundle.getParcelableArrayList("items");
+        for(Product p: products){
+            Log.i("Deliver", p.getName().toString());
+        }
 
         confirmPanel = (LinearLayout) findViewById(R.id.confirmPanel);
         confirmPickup = (Button) findViewById(R.id.confirmBtn);

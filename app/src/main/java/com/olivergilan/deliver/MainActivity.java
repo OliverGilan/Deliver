@@ -69,7 +69,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
     private EditText selectItems;
-    public boolean hasItems;
 
     GoogleMap map;
     Button logOutBtn;

@@ -2,18 +2,20 @@ package com.olivergilan.deliver;
 
 import android.location.Location;
 
+import java.util.ArrayList;
+
 public class Order {
 
-    private Product[] items;
+    private ArrayList<Product> items;
     private int itemCount;
     private int totalCost = 0;
     private double longitude;
     private double latitude;
 
 
-    public Order(Product[] products, double mlong, double mlat){
+    public Order(ArrayList<Product> products, double mlong, double mlat){
         items = products;
-        itemCount = items.length;
+        itemCount = items.size();
         for (Product item: items) {
             totalCost += item.getCost();
         }
@@ -29,7 +31,7 @@ public class Order {
         return longitude;
     }
 
-    public Product[] getItems() {
+    public ArrayList<Product> getItems() {
         return items;
     }
 

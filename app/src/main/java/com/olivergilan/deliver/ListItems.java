@@ -57,9 +57,9 @@ public class ListItems extends AppCompatActivity {
     EditText nameItem, itemCost;
     Button addItem;
     Button finishedBtn;
-    ArrayList<String> items;
-    ArrayList<Product> products;
-    ArrayList<Double> costs;
+    private ArrayList<String> items;
+    private ArrayList<Product> products;
+    private ArrayList<Double> costs;
     ArrayAdapter<Product> arrayAdapter;
 
     private FirebaseAuth mAuth;
@@ -118,13 +118,14 @@ public class ListItems extends AppCompatActivity {
                     double cost = Double.parseDouble(itemCost.getText().toString().trim());
                     Product product = new Product(item, cost);
 
-                    //products.add(product);
-                    arrayAdapter.add(product);
-                    items.add(product.getName());
-                    costs.add(product.getCost());
+                    products.add(product);
+//                    arrayAdapter.add(product);
+//                    items.add(product.getName());
+//                    costs.add(product.getCost());
 
                     nameItem.setText("");
                     itemCost.setText("");
+                    nameItem.requestFocus();
                 }
             }
         });
@@ -132,12 +133,11 @@ public class ListItems extends AppCompatActivity {
         finishedBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(items.size() == 0){
-                    startActivity(new Intent(ListItems.this, setOrderLocation.class));
+                if(products.size() == 0){
+                    startActivity(new Intent(ListItems.this, MainActivity.class));
                 }else{
-                    Intent intent = new Intent(ListItems.this, MainActivity.class);
-                    intent.putExtra("items", items);
-                    intent.putExtra("cost", costs);
+                    Intent intent = new Intent(ListItems.this, setOrderLocation.class);
+                    intent.putExtra("items", products);
                     startActivity(intent);
                 }
             }
