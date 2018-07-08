@@ -93,7 +93,7 @@ public class ListItems extends AppCompatActivity {
         costs = new ArrayList<>();
 
 
-        arrayAdapter = new ArrayAdapter<Product>(this, android.R.layout.simple_list_item_2, android.R.id.text1, products){
+        arrayAdapter = new ArrayAdapter<Product>(this, android.R.layout.simple_list_item_2, android.R.id.text1){
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
@@ -119,7 +119,7 @@ public class ListItems extends AppCompatActivity {
                     Product product = new Product(item, cost);
 
                     products.add(product);
-//                    arrayAdapter.add(product);
+                    arrayAdapter.add(product);
 //                    items.add(product.getName());
 //                    costs.add(product.getCost());
 
