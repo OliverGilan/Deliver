@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -49,17 +50,22 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 
 public class setOrderLocation extends AppCompatActivity implements OnMapReadyCallback {
 
     private LinearLayout confirmPanel;
     private Button confirmPickup, denyPickup, placeOrder;
+    private RelativeLayout orderSummary;
+    private TextView itemSummary, costSummary;
+
     private Place pickupLocation;
 
-    private ArrayList<String> items;
+    private int itemCount = 0;
     private ArrayList<Product> products;
-    private ArrayList<Double> costs;
+    private int cost = 0;
 
     /*
     *   Google Maps API Fragment declarations
@@ -87,12 +93,19 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
         Bundle bundle = this.getIntent().getExtras();
         products = bundle.getParcelableArrayList("items");
         for(Product p: products){
+            itemCount++;
+            cost += p.getCost();
             Log.i("Deliver", p.getName().toString());
         }
 
         confirmPanel = (LinearLayout) findViewById(R.id.confirmPanel);
         confirmPickup = (Button) findViewById(R.id.confirmBtn);
         denyPickup = (Button) findViewById(R.id.denyBtn);
+        placeOrder = (Button) findViewById(R.id.placeOrder);
+        orderSummary = (RelativeLayout) findViewById(R.id.orderSummary);
+        itemSummary = (TextView) findViewById(R.id.itemSummary);
+        costSummary = (TextView) findViewById(R.id.totalCostSummary);
+
 
         //Location Requests
         mLocationCallback = new LocationCallback(){
@@ -257,6 +270,7 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
                 pickupLocation = LOCATION;
                 confirmPanel.setVisibility(View.GONE);
                 resizeFragment(fragment, LinearLayout.LayoutParams.MATCH_PARENT, 500);
+                confirmOrder();
             }
         });
     }
@@ -272,6 +286,18 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
             view.setLayoutParams(p);
             view.requestLayout();
         }
+    }
+
+    public void confirmOrder(){
+        orderSummary.setVisibility(View.VISIBLE);
+        itemSummary.setText(itemCount + " items from " + pickupLocation.getName());
+        costSummary.setText("Estimated cost: $ " + (cost+1));
+        placeOrder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
     }
 
 

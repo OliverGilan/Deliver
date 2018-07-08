@@ -61,6 +61,33 @@
                 android:text="Yes" />
         </LinearLayout>
     </LinearLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:id="@+id/orderSummary"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="# Items from LOCATION"
+            android:textAlignment="center"
+            android:id="@+id/itemSummary"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/itemSummary"
+            android:text="Estimated cost: $"
+            android:textAlignment="center"
+            android:id="@+id/totalCostSummary"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/totalCostSummary"
+            android:text="Submit Order"
+            android:id="@+id/placeOrder" />
+
+    </RelativeLayout>
 
 </LinearLayout>
 </android.support.constraint.ConstraintLayout>
