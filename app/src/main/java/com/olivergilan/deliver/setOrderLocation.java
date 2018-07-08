@@ -5,6 +5,8 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.nfc.Tag;
 import android.support.annotation.NonNull;
@@ -49,10 +51,17 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.w3c.dom.Text;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class setOrderLocation extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -85,6 +94,12 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
     Marker pickupMarker;
     Marker dropOffMarker;
 
+    //Firebase
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
+    private FirebaseFirestore db;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,6 +121,10 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
         itemSummary = (TextView) findViewById(R.id.itemSummary);
         costSummary = (TextView) findViewById(R.id.totalCostSummary);
 
+
+        db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
 
         //Location Requests
         mLocationCallback = new LocationCallback(){
@@ -289,13 +308,41 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
     }
 
     public void confirmOrder(){
+        LatLng coordinates = pickupLocation.getLatLng();
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        List<Address> addresses = null;
+        try {
+            addresses = geocoder.getFromLocation(
+                    coordinates.latitude,
+                    coordinates.longitude,
+                    1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        final Address address = addresses.get(0);
         orderSummary.setVisibility(View.VISIBLE);
         itemSummary.setText(itemCount + " items from " + pickupLocation.getName());
         costSummary.setText("Estimated cost: $ " + (cost+1));
         placeOrder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                Order newOrder = new Order(products, pickupLocation, currentUser);
+                db.collection("allOrders")
+                        .document(address.getCountryCode().toString())
+                        .collection("orders")
+                        .add(newOrder)
+                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                            @Override
+                            public void onSuccess(DocumentReference documentReference) {
+                                Toast.makeText(setOrderLocation.this, "Shit worked yo", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.e("Database", "Didn't work");
+                            }
+                        });
             }
         });
     }
