@@ -17,6 +17,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatCallback;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -50,25 +51,30 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.sql.Connection;
+import java.util.Collection;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback,
         GoogleMap.OnMyLocationButtonClickListener {
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
-    private FirebaseDatabase database;
-    private DatabaseReference dRef;
     private FirebaseStorage storage;
+    private FirebaseFirestore database;
     private StorageReference sRef;
     private Location mCurrentLocation;
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
     private EditText selectItems;
+    private boolean activeOrder;
+    private String orderRef;
 
     GoogleMap map;
     Button logOutBtn;
@@ -81,15 +87,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Intent intent = getIntent();
+        if(intent.hasExtra("status")){
+            activeOrder = intent.getExtras().getBoolean("status");
+        }
+        if(intent.hasExtra("order")){
+            orderRef = intent.getExtras().getString("order");
+        }
+
+        database = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         logOutBtn = (Button) findViewById(R.id.logOut);
         currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
             startActivity(new Intent(this, SignUp.class));
         }
-        database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
-        dRef = database.getReference();
         sRef = storage.getReference();
         selectItems = (EditText) findViewById(R.id.chooseItems);
 
@@ -172,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             createLocationRequest();
             mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
             map.setMyLocationEnabled(true);
-            //map.setOnMyLocationButtonClickListener(this);
+            map.setOnMyLocationButtonClickListener(this);
             selectItems.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -241,6 +254,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public boolean onMyLocationButtonClick() {
+
         return false;
     }
 

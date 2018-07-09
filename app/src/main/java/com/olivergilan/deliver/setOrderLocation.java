@@ -342,6 +342,7 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
                                 Toast.makeText(setOrderLocation.this, "Order submitted", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(setOrderLocation.this, MainActivity.class);
                                 intent.putExtra("status", true);
+                                intent.putExtra("order", documentReference.getPath());
                                 startActivity(intent);
                             }
                         })
