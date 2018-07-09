@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Camera;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.annotation.NonNull;
@@ -43,6 +44,8 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -53,6 +56,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -77,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String orderRef;
 
     GoogleMap map;
+    private Marker userOrder;
     Button logOutBtn;
     final int REQUEST_LOCATION = 1;
     final int REQUEST_CHECK_SETTINGS = 2;
@@ -110,7 +115,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
-                    updateLocation(location);
+                    if(activeOrder==true){
+                        focusOnOrder();
+                    }else{
+                        updateLocation(location);
+                    }
                 }
             };
         };
@@ -254,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public boolean onMyLocationButtonClick() {
-
+        activeOrder = false;
         return false;
     }
 
@@ -269,5 +278,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng pos = new LatLng(location.getLatitude(), location.getLongitude());
         CameraUpdate update = CameraUpdateFactory.newLatLngZoom(pos, 15);
         map.animateCamera(update);
+    }
+
+    /*
+     * Center map on user Order
+     */
+    public void focusOnOrder(){
+        DocumentReference orderReferance = database.document(orderRef);
+        orderReferance.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        Log.d("Order Focus", "DocumentSnapshot data: " + document.getData());
+                        Order order = document.toObject(Order.class);
+                        LatLng coordinates = new LatLng(document.getDouble("latitude"), document.getDouble("longitude"));
+                        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(coordinates, 15);
+                        map.animateCamera(update);
+                        userOrder = map.addMarker(new MarkerOptions()
+                            .title("ORDER")
+                            .position(coordinates));
+                        userOrder.setTag(order);
+                    } else {
+                        Log.d("Order Focus", "No such document");
+                    }
+                } else {
+                    Log.d("Order Focus", "get failed with ", task.getException());
+                }
+            }
+        });
     }
 }
