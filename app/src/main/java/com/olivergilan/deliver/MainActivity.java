@@ -102,13 +102,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             };
         };
         if (googleServicesAvailable()) {
-            Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show();
-//            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-//                    == PackageManager.PERMISSION_GRANTED) {
-//                Toast.makeText(this, "Permission Needed", Toast.LENGTH_SHORT).show();
-//            } else {
-//                mapInit();
-//            }
             mapInit();
         }
 
@@ -147,7 +140,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        Toast.makeText(this, "Ready", Toast.LENGTH_LONG).show();
         MapStyleOptions style = MapStyleOptions.loadRawResourceStyle(this, R.raw.mapstyle_grayscale);
         map.setMapStyle(style);
 
@@ -249,7 +241,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public boolean onMyLocationButtonClick() {
-        //Toast.makeText(this, "MyLocation button clicked", Toast.LENGTH_SHORT).show();
         return false;
     }
 

@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -69,6 +70,7 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
     private Button confirmPickup, denyPickup, placeOrder;
     private RelativeLayout orderSummary;
     private TextView itemSummary, costSummary;
+    private ProgressBar progressBar;
 
     private Place pickupLocation;
 
@@ -120,6 +122,7 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
         orderSummary = (RelativeLayout) findViewById(R.id.orderSummary);
         itemSummary = (TextView) findViewById(R.id.itemSummary);
         costSummary = (TextView) findViewById(R.id.totalCostSummary);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
 
         db = FirebaseFirestore.getInstance();
@@ -326,6 +329,7 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
         placeOrder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                progressBar.setVisibility(View.VISIBLE);
                 Order newOrder = new Order(products, pickupLocation, currentUser);
                 db.collection("allOrders")
                         .document(address.getCountryCode().toString())
@@ -334,7 +338,11 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                             @Override
                             public void onSuccess(DocumentReference documentReference) {
-                                Toast.makeText(setOrderLocation.this, "Shit worked yo", Toast.LENGTH_SHORT).show();
+                                progressBar.setVisibility(View.GONE);
+                                Toast.makeText(setOrderLocation.this, "Order submitted", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(setOrderLocation.this, MainActivity.class);
+                                intent.putExtra("status", true);
+                                startActivity(intent);
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {

@@ -23,6 +23,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.regex.Pattern;
 
@@ -30,6 +31,7 @@ public class SignUp extends AppCompatActivity{
 
     private FirebaseAuth mAuth;
     private FirebaseDatabase database;
+    private FirebaseFirestore db;
     DatabaseReference mRef;
     EditText email, password, name;
     Button signUpBtn;
@@ -51,6 +53,7 @@ public class SignUp extends AppCompatActivity{
         mAuth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         mRef = database.getReference("users");
+        db = FirebaseFirestore.getInstance();
 
         signUpBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -101,7 +104,9 @@ public class SignUp extends AppCompatActivity{
                         if(task.isSuccessful()){
                             progressbar.setVisibility(View.INVISIBLE);
                             final FirebaseUser user = mAuth.getCurrentUser();
-                            mRef.child(user.getUid()).setValue(user);
+//                            mRef.child(user.getUid()).setValue(user);
+                            db.collection("users")
+                                    .add(user);
                             //mRef.child(user.getUid()).child("name").setValue(name);
                             user.sendEmailVerification().addOnCompleteListener(SignUp.this, new OnCompleteListener<Void>() {
                                 @Override

@@ -18,6 +18,18 @@ public class Order {
     private double latitude;
 
 
+    public Order(ArrayList<Product> products, Place pickup, FirebaseUser user){
+        items = products;
+        itemCount = items.size();
+        for (Product item: items) {
+            totalCost += item.getCost();
+        }
+//        pickupLocation = pickup;
+        longitude = pickup.getLatLng().longitude;
+        latitude = pickup.getLatLng().latitude;
+        customer = user;
+    }
+
     public Order(ArrayList<Product> products, double mlong, double mlat, FirebaseUser user){
         items = products;
         itemCount = items.size();
@@ -26,18 +38,6 @@ public class Order {
         }
         longitude = mlong;
         latitude = mlat;
-        customer = user;
-    }
-
-    public Order(ArrayList<Product> products, Place pickup, FirebaseUser user){
-        items = products;
-        itemCount = items.size();
-        for (Product item: items) {
-            totalCost += item.getCost();
-        }
-        pickupLocation = pickup;
-        longitude = pickup.getLatLng().longitude;
-        latitude = pickup.getLatLng().latitude;
         customer = user;
     }
 
@@ -59,5 +59,13 @@ public class Order {
 
     public int getTotalCost() {
         return totalCost;
+    }
+
+    public FirebaseUser getCustomer() {
+        return customer;
+    }
+
+    public Place getPickupLocation() {
+        return pickupLocation;
     }
 }
