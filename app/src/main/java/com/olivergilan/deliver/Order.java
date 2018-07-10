@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public class Order {
 
-    private FirebaseUser customer;
+    private String customer;
     private ArrayList<Product> items;
     private Place pickupLocation;
     private int itemCount;
@@ -18,7 +18,7 @@ public class Order {
     private double latitude;
 
 
-    public Order(ArrayList<Product> products, Place pickup, FirebaseUser user){
+    public Order(ArrayList<Product> products, Place pickup, String user){
         items = products;
         itemCount = items.size();
         for (Product item: items) {
@@ -30,7 +30,7 @@ public class Order {
         customer = user;
     }
 
-    public Order(ArrayList<Product> products, double mlong, double mlat, FirebaseUser user){
+    public Order(ArrayList<Product> products, double mlong, double mlat, String user){
         items = products;
         itemCount = items.size();
         for (Product item: items) {
@@ -68,7 +68,7 @@ public class Order {
         return totalCost;
     }
 
-    public FirebaseUser getCustomer() {
+    public String getCustomer() {
         return customer;
     }
 

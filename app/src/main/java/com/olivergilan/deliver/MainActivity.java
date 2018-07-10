@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if(activeOrder==true){
                         focusOnOrder();
                     }else {
-                        updateLocation(location);
+//                        updateLocation(location);
                     }
                 }
             };
@@ -345,11 +345,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 Log.i("CHICKEN", document.get("latitude").toString());
 
-                                Order o = new Order((ArrayList<Product>)document.get("items"),
-                                        (double)document.get("latitude"),
-                                        (double)document.get("longitude"),
-                                        (FirebaseUser)document.get("customer"));
-//                                Order o = document.toObject(Order.class);
+////                                Order o = new Order((ArrayList<Product>)document.get("items"),
+////                                        (double)document.get("latitude"),
+////                                        (double)document.get("longitude"),
+////                                        (FirebaseUser)document.get("customer"));
+                                Order o = document.toObject(Order.class);
                                 map.addMarker(new MarkerOptions()
                                 .position(new LatLng(o.getLatitude(), o.getLongitude()))
                                 .title(Integer.toString(o.getTotalCost())));
