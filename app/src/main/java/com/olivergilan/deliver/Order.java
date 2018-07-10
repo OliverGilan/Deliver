@@ -41,6 +41,13 @@ public class Order {
         customer = user;
     }
 
+    public Order(){
+        itemCount = 0;
+        longitude=0;
+        latitude=0;
+        totalCost=0;
+    }
+
     public double getLatitude() {
         return latitude;
     }

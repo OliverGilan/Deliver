@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Camera;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.annotation.NonNull;
@@ -58,11 +60,18 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.io.IOException;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback,
         GoogleMap.OnMyLocationButtonClickListener {
@@ -117,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 for (Location location : locationResult.getLocations()) {
                     if(activeOrder==true){
                         focusOnOrder();
-                    }else{
+                    }else {
                         updateLocation(location);
                     }
                 }
@@ -185,6 +194,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         @Override
                         public void onSuccess(Location location) {
                             mCurrentLocation = location;
+                            getOrders(mCurrentLocation);
                             LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
                             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 15);
                             map.animateCamera(update);
@@ -308,5 +318,46 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         });
+    }
+
+    public void getOrders(Location location){
+        map.clear();
+        LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        List<Address> addresses = null;
+        try {
+            addresses = geocoder.getFromLocation(
+                    coordinates.latitude,
+                    coordinates.longitude,
+                    1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        final Address address = addresses.get(0);
+        database.collection("allOrders")
+                .document(address.getCountryCode().toString())
+                .collection("orders")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.i("CHICKEN", document.get("latitude").toString());
+
+                                Order o = new Order((ArrayList<Product>)document.get("items"),
+                                        (double)document.get("latitude"),
+                                        (double)document.get("longitude"),
+                                        (FirebaseUser)document.get("customer"));
+//                                Order o = document.toObject(Order.class);
+                                map.addMarker(new MarkerOptions()
+                                .position(new LatLng(o.getLatitude(), o.getLongitude()))
+                                .title(Integer.toString(o.getTotalCost())));
+                            }
+                        } else {
+                            Log.d("Whoops", "Error getting documents: ", task.getException());
+                        }
+                    }
+                });
     }
 }

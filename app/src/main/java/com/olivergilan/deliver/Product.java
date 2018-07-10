@@ -22,6 +22,11 @@ public class Product implements Parcelable{
         readFromParcel(in);
     }
 
+    public Product(){
+        name="";
+        cost=0;
+    }
+
     public void setName(String nameIn){
         name = nameIn;
     }
