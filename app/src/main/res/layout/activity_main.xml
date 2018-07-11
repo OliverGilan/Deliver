@@ -44,7 +44,7 @@
             android:id="@+id/orderSummary"
             android:background="#fff"
             android:layout_marginBottom="15px"
-            android:visibility="">
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="match_parent"

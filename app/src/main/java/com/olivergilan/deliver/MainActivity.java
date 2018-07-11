@@ -24,6 +24,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -97,6 +99,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     final int REQUEST_LOCATION = 1;
     final int REQUEST_CHECK_SETTINGS = 2;
 
+    private RelativeLayout acceptOrderPanel;
+    private Button acceptOrder;
+    private TextView itemSummary, estimatedCost;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,16 +127,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         storage = FirebaseStorage.getInstance();
         sRef = storage.getReference();
         selectItems = (EditText) findViewById(R.id.chooseItems);
+        acceptOrderPanel = (RelativeLayout) findViewById(R.id.orderSummary);
+        acceptOrder = (Button) findViewById(R.id.acceptOrder);
+        itemSummary = (TextView) findViewById(R.id.itemSummary);
+        estimatedCost = (TextView) findViewById(R.id.totalCostSummary);
 
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
-                    if(activeOrder==true){
-                        focusOnOrder();
-                    }else {
-//                        updateLocation(location);
-                    }
+//                   updateLocation(location);
                 }
             };
         };
@@ -197,10 +203,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         public void onSuccess(Location location) {
                             mCurrentLocation = location;
                             getOrders(mCurrentLocation);
-                            LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
-                            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 15);
-                            map.animateCamera(update);
-
+                            if(activeOrder==true) {
+                                focusOnOrder();
+                            }else{
+                                LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
+                                CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 15);
+                                map.animateCamera(update);
+                            }
                         }
                     });
             createLocationRequest();
@@ -217,7 +226,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
                 @Override
                 public void onInfoWindowClick(Marker marker) {
-
+                    Order order = (Order) marker.getTag();
+                    acceptOrderPanel.setVisibility(View.VISIBLE);
+                    itemSummary.setText(order.getItemCount() + " items from " + order.getPickupLocation());
+                    estimatedCost.setText("Estimated cost: $" + order.getTotalCost());
+                }
+            });
+            map.setOnInfoWindowCloseListener(new GoogleMap.OnInfoWindowCloseListener() {
+                @Override
+                public void onInfoWindowClose(Marker marker) {
+                    acceptOrderPanel.setVisibility(View.GONE);
                 }
             });
             selectItems.setOnClickListener(new View.OnClickListener() {
@@ -368,7 +386,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     .title("$: " + Integer.toString(o.getTotalCost()))
                                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
                                 m.setTag(o);
-                                m.showInfoWindow();
                                 orders.add(m);
                             }
                         } else {

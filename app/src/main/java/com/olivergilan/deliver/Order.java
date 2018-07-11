@@ -11,7 +11,7 @@ public class Order {
 
     private String customer;
     private ArrayList<Product> items;
-    private Place pickupLocation;
+    private String pickupLocation;
     private int itemCount;
     private int totalCost = 0;
     private double longitude;
@@ -24,7 +24,7 @@ public class Order {
         for (Product item: items) {
             totalCost += item.getCost();
         }
-//        pickupLocation = pickup;
+        pickupLocation = pickup.getName().toString();
         longitude = pickup.getLatLng().longitude;
         latitude = pickup.getLatLng().latitude;
         customer = user;
@@ -72,7 +72,7 @@ public class Order {
         return customer;
     }
 
-    public Place getPickupLocation() {
+    public String getPickupLocation() {
         return pickupLocation;
     }
 }
