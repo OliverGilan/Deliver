@@ -44,6 +44,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
@@ -91,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     GoogleMap map;
     private Marker userOrder;
+    private ArrayList<Marker> orders;
     Button logOutBtn;
     final int REQUEST_LOCATION = 1;
     final int REQUEST_CHECK_SETTINGS = 2;
@@ -205,6 +207,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
             map.setMyLocationEnabled(true);
             map.setOnMyLocationButtonClickListener(this);
+            map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                @Override
+                public boolean onMarkerClick(Marker marker) {
+                    Log.i("CHICKEN", "ORDER CLICKED");
+                    return false;
+                }
+            });
+            map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+                @Override
+                public void onInfoWindowClick(Marker marker) {
+
+                }
+            });
             selectItems.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -308,8 +323,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         map.animateCamera(update);
                         userOrder = map.addMarker(new MarkerOptions()
                             .title("ORDER")
-                            .position(coordinates));
+                            .position(coordinates)
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
                         userOrder.setTag(order);
+                        userOrder.showInfoWindow();
                     } else {
                         Log.d("Order Focus", "No such document");
                     }
@@ -325,6 +342,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         List<Address> addresses = null;
+        orders = new ArrayList<Marker>();
         try {
             addresses = geocoder.getFromLocation(
                     coordinates.latitude,
@@ -344,15 +362,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 Log.i("CHICKEN", document.get("latitude").toString());
-
-////                                Order o = new Order((ArrayList<Product>)document.get("items"),
-////                                        (double)document.get("latitude"),
-////                                        (double)document.get("longitude"),
-////                                        (FirebaseUser)document.get("customer"));
                                 Order o = document.toObject(Order.class);
-                                map.addMarker(new MarkerOptions()
-                                .position(new LatLng(o.getLatitude(), o.getLongitude()))
-                                .title(Integer.toString(o.getTotalCost())));
+                                Marker m = map.addMarker(new MarkerOptions()
+                                    .position(new LatLng(o.getLatitude(), o.getLongitude()))
+                                    .title("$: " + Integer.toString(o.getTotalCost()))
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
+                                m.setTag(o);
+                                m.showInfoWindow();
+                                orders.add(m);
                             }
                         } else {
                             Log.d("Whoops", "Error getting documents: ", task.getException());

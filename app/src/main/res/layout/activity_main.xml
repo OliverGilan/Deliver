@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:paddingLeft="10dp"
             android:text="Log Out"
-            android:visibility="invisible"/>
+            android:visibility="gone"/>
 
         <fragment
             android:id="@+id/mapFragment"
@@ -36,6 +36,37 @@
             android:shadowRadius="0"
             android:background="#ffff"
             android:hint="What items do you want delivered?" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:id="@+id/orderSummary"
+            android:background="#fff"
+            android:layout_marginBottom="15px"
+            android:visibility="">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="# Items from LOCATION"
+                android:textAlignment="center"
+                android:id="@+id/itemSummary"
+                />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/itemSummary"
+                android:text="Estimated cost: $"
+                android:textAlignment="center"
+                android:id="@+id/totalCostSummary"/>
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/totalCostSummary"
+                android:text="Accept Order"
+                android:id="@+id/acceptOrder" />
+        </RelativeLayout>
 
     </RelativeLayout>
 
