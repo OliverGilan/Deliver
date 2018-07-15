@@ -330,10 +330,10 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
             @Override
             public void onClick(View view) {
                 progressBar.setVisibility(View.VISIBLE);
-                Order newOrder = new Order(products, pickupLocation, currentUser.getUid());
+                Order newOrder = new Order(products, pickupLocation, currentUser.getUid(), address.getCountryCode().toString());
                 db.collection("allOrders")
-                        .document(address.getCountryCode().toString())
-                        .collection("orders")
+                        .document(newOrder.getCountryCode())
+                        .collection("pendingOrders")
                         .add(newOrder)
                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                             @Override

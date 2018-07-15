@@ -16,9 +16,10 @@ public class Order {
     private int totalCost = 0;
     private double longitude;
     private double latitude;
+    private String countryCode;
 
 
-    public Order(ArrayList<Product> products, Place pickup, String user){
+    public Order(ArrayList<Product> products, Place pickup, String user, String country){
         items = products;
         itemCount = items.size();
         for (Product item: items) {
@@ -28,6 +29,7 @@ public class Order {
         longitude = pickup.getLatLng().longitude;
         latitude = pickup.getLatLng().latitude;
         customer = user;
+        countryCode = country;
     }
 
     public Order(ArrayList<Product> products, double mlong, double mlat, String user){
@@ -74,5 +76,9 @@ public class Order {
 
     public String getPickupLocation() {
         return pickupLocation;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
     }
 }

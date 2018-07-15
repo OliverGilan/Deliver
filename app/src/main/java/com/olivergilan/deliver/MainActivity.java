@@ -1,25 +1,18 @@
 package com.olivergilan.deliver;
 
-import android.*;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
-import android.graphics.Camera;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationManager;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatCallback;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -30,11 +23,9 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
@@ -57,9 +48,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -69,10 +57,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -137,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onLocationResult(LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
 //                   updateLocation(location);
+                    isOrderActive(location);
                 }
             };
         };
@@ -226,10 +212,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
                 @Override
                 public void onInfoWindowClick(Marker marker) {
-                    Order order = (Order) marker.getTag();
+                    MarkerTag tag = (MarkerTag) marker.getTag();
+                    Order order = tag.getOrder();
+                    String id = tag.getId();
                     acceptOrderPanel.setVisibility(View.VISIBLE);
                     itemSummary.setText(order.getItemCount() + " items from " + order.getPickupLocation());
                     estimatedCost.setText("Estimated cost: $" + order.getTotalCost());
+                    database.collection("allOrders")
+                            .document(order.getCountryCode())
+                            .collection("activeOrders")
+                            .document(id)
+                            .set(order);
                 }
             });
             map.setOnInfoWindowCloseListener(new GoogleMap.OnInfoWindowCloseListener() {
@@ -381,11 +374,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 Log.i("CHICKEN", document.get("latitude").toString());
                                 Order o = document.toObject(Order.class);
+                                String id = document.getId();
+                                MarkerTag tag = new MarkerTag(id, o);
                                 Marker m = map.addMarker(new MarkerOptions()
                                     .position(new LatLng(o.getLatitude(), o.getLongitude()))
                                     .title("$: " + Integer.toString(o.getTotalCost()))
                                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
-                                m.setTag(o);
+                                m.setTag(tag);
                                 orders.add(m);
                             }
                         } else {
@@ -393,5 +388,49 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
                 });
+    }
+
+    public void isOrderActive(Location location){
+        LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        List<Address> addresses = null;
+        orders = new ArrayList<Marker>();
+        try {
+            addresses = geocoder.getFromLocation(
+                    coordinates.latitude,
+                    coordinates.longitude,
+                    1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        final Address address = addresses.get(0);
+        database.collection("allOrders")
+                .document(address.getCountryCode().toString())
+                .collection("activeOrders")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if(task.isSuccessful()){
+                            for (QueryDocumentSnapshot document: task.getResult()){
+                                Order o = document.toObject(Order.class);
+                                if(o.getCustomer().matches(currentUser.getUid())){
+                                    showOrderAlert();
+                                }
+                            }
+                        }
+                    }
+                });
+    }
+
+    public void showOrderAlert(){
+        TextView alert = (TextView) findViewById(R.id.alert);
+        alert.setVisibility(View.VISIBLE);
+        alert.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
     }
 }
