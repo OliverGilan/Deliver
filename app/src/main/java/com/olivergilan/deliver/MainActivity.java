@@ -223,6 +223,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             .collection("activeOrders")
                             .document(id)
                             .set(order);
+                    Intent intent = new Intent(MainActivity.this, DeliverOrder.class);
+
                 }
             });
             map.setOnInfoWindowCloseListener(new GoogleMap.OnInfoWindowCloseListener() {
