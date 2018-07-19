@@ -70,7 +70,6 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
 
     private Button startNavBtn;
 
-    private LatLng destination;
     private LatLng start;
 
     @Override
@@ -156,6 +155,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
                                 LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
                                 CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 15);
                                 map.animateCamera(update);
+                            getNavRoute(start);
                         }
                     });
             createLocationRequest();
@@ -163,7 +163,6 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
             map.setMyLocationEnabled(true);
             map.setOnMyLocationButtonClickListener(this);
 
-            drawNavRoute(start);
         }
     }
 
@@ -178,39 +177,46 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
         return false;
     }
 
-    public void drawNavRoute(LatLng start){
-        String serverKey = "AIzaSyC2M-Riz_Eiq-OFaISvh3zAKLuLChhWgNE";
+    public void getNavRoute(final LatLng start){
+        final String serverKey = "AIzaSyC2M-Riz_Eiq-OFaISvh3zAKLuLChhWgNE";
         LatLng origin = start;
         DocumentReference ref = database.document(orderRef);
         ref.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
-                destination = new LatLng((double)documentSnapshot.get("latitude"), (double)documentSnapshot.get("longitude"));
+                LatLng destination = new LatLng((double)documentSnapshot.get("latitude"), (double)documentSnapshot.get("longitude"));
                 Log.i("PATH", "latitude:" + documentSnapshot.get("latitude").toString() + " Destination: " + destination.toString());
+                if(destination != null){
+                    drawNavRoute(serverKey, start, destination);
+                }
             }
         });
-//        GoogleDirection.withServerKey(serverKey)
-//                .from(start)
-//                .to(destination)
-//                .transportMode(TransportMode.DRIVING)
-//                .avoid(AvoidType.FERRIES)
-//                .language(Language.ENGLISH)
-//                .unit(Unit.IMPERIAL)
-//                .execute(new DirectionCallback() {
-//                    @Override
-//                    public void onDirectionSuccess(Direction direction, String rawBody) {
-//                        Route route = direction.getRouteList().get(0);
-//                        Leg leg = route.getLegList().get(0);
-//                        ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
-//                        PolylineOptions polylineOptions = DirectionConverter.createPolyline(DeliverOrder.this, directionPositionList, 5, Color.MAGENTA);
-//                        map.addPolyline(polylineOptions);
-//                        Log.i("PATH", rawBody);
-//                    }
-//
-//                    @Override
-//                    public void onDirectionFailure(Throwable t) {
-//                        Log.e("PATH", "SHIT DIDNT WORK");
-//                    }
-//                });
+    }
+
+    public void drawNavRoute(String key, LatLng start, LatLng destination){
+        Log.i("PATH", "ACTIVATED: " + destination.toString());
+        GoogleDirection.withServerKey(key)
+                .from(start)
+                .to(destination)
+                .transportMode(TransportMode.DRIVING)
+                .avoid(AvoidType.FERRIES)
+                .language(Language.ENGLISH)
+                .unit(Unit.IMPERIAL)
+                .execute(new DirectionCallback() {
+                    @Override
+                    public void onDirectionSuccess(Direction direction, String rawBody) {
+                        Route route = direction.getRouteList().get(0);
+                        Leg leg = route.getLegList().get(0);
+                        ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
+                        PolylineOptions polylineOptions = DirectionConverter.createPolyline(DeliverOrder.this, directionPositionList, 8, Color.BLUE);
+                        map.addPolyline(polylineOptions);
+                        Log.i("PATH", rawBody);
+                    }
+
+                    @Override
+                    public void onDirectionFailure(Throwable t) {
+                        Log.e("PATH", "SHIT DIDNT WORK");
+                    }
+                });
     }
 }
