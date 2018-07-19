@@ -60,6 +60,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
@@ -110,6 +111,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         database = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build();
+        database.setFirestoreSettings(settings);
         mAuth = FirebaseAuth.getInstance();
         logOutBtn = (Button) findViewById(R.id.logOut);
         currentUser = mAuth.getCurrentUser();
@@ -123,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
+                Log.i("CHICKEN", "locationCallback");
                 for (Location location : locationResult.getLocations()) {
                     if(activeOrder==true){
                         focusOnOrder();
@@ -193,8 +199,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
+                            Log.d("CHICKEN", "Got Last Location");
                             mCurrentLocation = location;
                             getOrders(mCurrentLocation);
+                            Log.d("CHICKEN", "ExecutedLast Order");
                             LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
                             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 15);
                             map.animateCamera(update);
@@ -202,9 +210,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     });
             createLocationRequest();
+            Log.d("CHICKEN", "Created location request");
             mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
             map.setMyLocationEnabled(true);
             map.setOnMyLocationButtonClickListener(this);
+            Log.d("CHICKEN", "Set my location button");
             selectItems.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -240,6 +250,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 }
             });
+            Log.i("CHICKEN", "location2");
         }
     }
 
@@ -342,9 +353,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
+                            Log.d("CHICKEN", "GOT DOCUMENTS");
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.i("CHICKEN", document.get("latitude").toString());
-
 ////                                Order o = new Order((ArrayList<Product>)document.get("items"),
 ////                                        (double)document.get("latitude"),
 ////                                        (double)document.get("longitude"),
@@ -355,7 +365,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 .title(Integer.toString(o.getTotalCost())));
                             }
                         } else {
-                            Log.d("Whoops", "Error getting documents: ", task.getException());
+                            Log.d("CHICKEN", "Error getting documents: ", task.getException());
                         }
                     }
                 });
