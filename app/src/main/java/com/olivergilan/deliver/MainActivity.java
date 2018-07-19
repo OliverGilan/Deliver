@@ -100,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         if(intent.hasExtra("order")){
             orderRef = intent.getExtras().getString("order");
+            Log.i("PATH", orderRef);
         }
 
         database = FirebaseFirestore.getInstance();
@@ -213,18 +214,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 @Override
                 public void onInfoWindowClick(Marker marker) {
                     MarkerTag tag = (MarkerTag) marker.getTag();
-                    Order order = tag.getOrder();
-                    String id = tag.getId();
+                    final Order order = tag.getOrder();
+                    final String id = tag.getId();
                     acceptOrderPanel.setVisibility(View.VISIBLE);
                     itemSummary.setText(order.getItemCount() + " items from " + order.getPickupLocation());
                     estimatedCost.setText("Estimated cost: $" + order.getTotalCost());
-                    database.collection("allOrders")
-                            .document(order.getCountryCode())
-                            .collection("activeOrders")
-                            .document(id)
-                            .set(order);
-                    Intent intent = new Intent(MainActivity.this, DeliverOrder.class);
-
+                    acceptOrder = (Button) findViewById(R.id.acceptOrder);
+                    acceptOrder.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            database.collection("allOrders")
+                                    .document(order.getCountryCode())
+                                    .collection("activeOrders")
+                                    .document(id)
+                                    .set(order);
+                            Intent intent = new Intent(MainActivity.this, DeliverOrder.class);
+                            String ref = "allOrders/" + order.getCountryCode() + "/activeOrders/" + id;
+                            intent.putExtra("ref", ref);
+                            startActivity(intent);
+                        }
+                    });
                 }
             });
             map.setOnInfoWindowCloseListener(new GoogleMap.OnInfoWindowCloseListener() {
@@ -367,7 +376,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         final Address address = addresses.get(0);
         database.collection("allOrders")
                 .document(address.getCountryCode().toString())
-                .collection("orders")
+                .collection("pendingOrders")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -393,36 +402,36 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void isOrderActive(Location location){
-        LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
-        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-        List<Address> addresses = null;
-        orders = new ArrayList<Marker>();
-        try {
-            addresses = geocoder.getFromLocation(
-                    coordinates.latitude,
-                    coordinates.longitude,
-                    1);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        final Address address = addresses.get(0);
-        database.collection("allOrders")
-                .document(address.getCountryCode().toString())
-                .collection("activeOrders")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if(task.isSuccessful()){
-                            for (QueryDocumentSnapshot document: task.getResult()){
-                                Order o = document.toObject(Order.class);
-                                if(o.getCustomer().matches(currentUser.getUid())){
-                                    showOrderAlert();
-                                }
-                            }
-                        }
-                    }
-                });
+//        LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
+//        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+//        List<Address> addresses = null;
+//        orders = new ArrayList<Marker>();
+//        try {
+//            addresses = geocoder.getFromLocation(
+//                    coordinates.latitude,
+//                    coordinates.longitude,
+//                    1);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        final Address address = addresses.get(0);
+//        database.collection("allOrders")
+//                .document(address.getCountryCode().toString())
+//                .collection("activeOrders")
+//                .get()
+//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+//                        if(task.isSuccessful()){
+//                            for (QueryDocumentSnapshot document: task.getResult()){
+//                                Order o = document.toObject(Order.class);
+//                                if(o.getCustomer().matches(currentUser.getUid())){
+//                                    showOrderAlert();
+//                                }
+//                            }
+//                        }
+//                    }
+//                });
     }
 
     public void showOrderAlert(){
