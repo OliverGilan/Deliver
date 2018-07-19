@@ -1,38 +1,31 @@
 package com.olivergilan.deliver;
 
-import android.*;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
-import android.graphics.Camera;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationManager;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatCallback;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
@@ -44,6 +37,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
@@ -54,23 +48,16 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -92,9 +79,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     GoogleMap map;
     private Marker userOrder;
+    private ArrayList<Marker> orders;
     Button logOutBtn;
     final int REQUEST_LOCATION = 1;
     final int REQUEST_CHECK_SETTINGS = 2;
+
+    private RelativeLayout acceptOrderPanel;
+    private Button acceptOrder;
+    private TextView itemSummary, estimatedCost;
 
 
     @Override
@@ -108,13 +100,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         if(intent.hasExtra("order")){
             orderRef = intent.getExtras().getString("order");
+            Log.i("PATH", orderRef);
         }
 
         database = FirebaseFirestore.getInstance();
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                .setTimestampsInSnapshotsEnabled(true)
-                .build();
-        database.setFirestoreSettings(settings);
         mAuth = FirebaseAuth.getInstance();
         logOutBtn = (Button) findViewById(R.id.logOut);
         currentUser = mAuth.getCurrentUser();
@@ -124,17 +113,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         storage = FirebaseStorage.getInstance();
         sRef = storage.getReference();
         selectItems = (EditText) findViewById(R.id.chooseItems);
+        acceptOrderPanel = (RelativeLayout) findViewById(R.id.orderSummary);
+        acceptOrder = (Button) findViewById(R.id.acceptOrder);
+        itemSummary = (TextView) findViewById(R.id.itemSummary);
+        estimatedCost = (TextView) findViewById(R.id.totalCostSummary);
 
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                Log.i("CHICKEN", "locationCallback");
                 for (Location location : locationResult.getLocations()) {
-                    if(activeOrder==true){
-                        focusOnOrder();
-                    }else {
-//                        updateLocation(location);
-                    }
+//                   updateLocation(location);
+                    isOrderActive(location);
                 }
             };
         };
@@ -199,22 +188,60 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
-                            Log.d("CHICKEN", "Got Last Location");
                             mCurrentLocation = location;
                             getOrders(mCurrentLocation);
-                            Log.d("CHICKEN", "ExecutedLast Order");
-                            LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
-                            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 15);
-                            map.animateCamera(update);
-
+                            if(activeOrder==true) {
+                                focusOnOrder();
+                            }else{
+                                LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
+                                CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 15);
+                                map.animateCamera(update);
+                            }
                         }
                     });
             createLocationRequest();
-            Log.d("CHICKEN", "Created location request");
             mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
             map.setMyLocationEnabled(true);
             map.setOnMyLocationButtonClickListener(this);
-            Log.d("CHICKEN", "Set my location button");
+            map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                @Override
+                public boolean onMarkerClick(Marker marker) {
+                    Log.i("CHICKEN", "ORDER CLICKED");
+                    return false;
+                }
+            });
+            map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+                @Override
+                public void onInfoWindowClick(Marker marker) {
+                    MarkerTag tag = (MarkerTag) marker.getTag();
+                    final Order order = tag.getOrder();
+                    final String id = tag.getId();
+                    acceptOrderPanel.setVisibility(View.VISIBLE);
+                    itemSummary.setText(order.getItemCount() + " items from " + order.getPickupLocation());
+                    estimatedCost.setText("Estimated cost: $" + order.getTotalCost());
+                    acceptOrder = (Button) findViewById(R.id.acceptOrder);
+                    acceptOrder.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            database.collection("allOrders")
+                                    .document(order.getCountryCode())
+                                    .collection("activeOrders")
+                                    .document(id)
+                                    .set(order);
+                            Intent intent = new Intent(MainActivity.this, DeliverOrder.class);
+                            String ref = "allOrders/" + order.getCountryCode() + "/activeOrders/" + id;
+                            intent.putExtra("ref", ref);
+                            startActivity(intent);
+                        }
+                    });
+                }
+            });
+            map.setOnInfoWindowCloseListener(new GoogleMap.OnInfoWindowCloseListener() {
+                @Override
+                public void onInfoWindowClose(Marker marker) {
+                    acceptOrderPanel.setVisibility(View.GONE);
+                }
+            });
             selectItems.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -250,7 +277,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 }
             });
-            Log.i("CHICKEN", "location2");
         }
     }
 
@@ -319,8 +345,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         map.animateCamera(update);
                         userOrder = map.addMarker(new MarkerOptions()
                             .title("ORDER")
-                            .position(coordinates));
+                            .position(coordinates)
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
                         userOrder.setTag(order);
+                        userOrder.showInfoWindow();
                     } else {
                         Log.d("Order Focus", "No such document");
                     }
@@ -336,6 +364,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         List<Address> addresses = null;
+        orders = new ArrayList<Marker>();
         try {
             addresses = geocoder.getFromLocation(
                     coordinates.latitude,
@@ -347,27 +376,72 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         final Address address = addresses.get(0);
         database.collection("allOrders")
                 .document(address.getCountryCode().toString())
-                .collection("orders")
+                .collection("pendingOrders")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-                            Log.d("CHICKEN", "GOT DOCUMENTS");
                             for (QueryDocumentSnapshot document : task.getResult()) {
-////                                Order o = new Order((ArrayList<Product>)document.get("items"),
-////                                        (double)document.get("latitude"),
-////                                        (double)document.get("longitude"),
-////                                        (FirebaseUser)document.get("customer"));
+                                Log.i("CHICKEN", document.get("latitude").toString());
                                 Order o = document.toObject(Order.class);
-                                map.addMarker(new MarkerOptions()
-                                .position(new LatLng(o.getLatitude(), o.getLongitude()))
-                                .title(Integer.toString(o.getTotalCost())));
+                                String id = document.getId();
+                                MarkerTag tag = new MarkerTag(id, o);
+                                Marker m = map.addMarker(new MarkerOptions()
+                                    .position(new LatLng(o.getLatitude(), o.getLongitude()))
+                                    .title("$: " + Integer.toString(o.getTotalCost()))
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
+                                m.setTag(tag);
+                                orders.add(m);
                             }
                         } else {
-                            Log.d("CHICKEN", "Error getting documents: ", task.getException());
+                            Log.d("Whoops", "Error getting documents: ", task.getException());
                         }
                     }
                 });
+    }
+
+    public void isOrderActive(Location location){
+//        LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
+//        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+//        List<Address> addresses = null;
+//        orders = new ArrayList<Marker>();
+//        try {
+//            addresses = geocoder.getFromLocation(
+//                    coordinates.latitude,
+//                    coordinates.longitude,
+//                    1);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        final Address address = addresses.get(0);
+//        database.collection("allOrders")
+//                .document(address.getCountryCode().toString())
+//                .collection("activeOrders")
+//                .get()
+//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+//                        if(task.isSuccessful()){
+//                            for (QueryDocumentSnapshot document: task.getResult()){
+//                                Order o = document.toObject(Order.class);
+//                                if(o.getCustomer().matches(currentUser.getUid())){
+//                                    showOrderAlert();
+//                                }
+//                            }
+//                        }
+//                    }
+//                });
+    }
+
+    public void showOrderAlert(){
+        TextView alert = (TextView) findViewById(R.id.alert);
+        alert.setVisibility(View.VISIBLE);
+        alert.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
     }
 }

@@ -11,23 +11,25 @@ public class Order {
 
     private String customer;
     private ArrayList<Product> items;
-    private Place pickupLocation;
+    private String pickupLocation;
     private int itemCount;
     private int totalCost = 0;
     private double longitude;
     private double latitude;
+    private String countryCode;
 
 
-    public Order(ArrayList<Product> products, Place pickup, String user){
+    public Order(ArrayList<Product> products, Place pickup, String user, String country){
         items = products;
         itemCount = items.size();
         for (Product item: items) {
             totalCost += item.getCost();
         }
-//        pickupLocation = pickup;
+        pickupLocation = pickup.getName().toString();
         longitude = pickup.getLatLng().longitude;
         latitude = pickup.getLatLng().latitude;
         customer = user;
+        countryCode = country;
     }
 
     public Order(ArrayList<Product> products, double mlong, double mlat, String user){
@@ -72,7 +74,11 @@ public class Order {
         return customer;
     }
 
-    public Place getPickupLocation() {
+    public String getPickupLocation() {
         return pickupLocation;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
     }
 }
