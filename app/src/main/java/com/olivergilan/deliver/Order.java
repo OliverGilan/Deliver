@@ -10,6 +10,8 @@ import java.util.ArrayList;
 public class Order {
 
     private String customer;
+    private double customerLat;
+    private double customerLng;
     private ArrayList<Product> items;
     private String pickupLocation;
     private int itemCount;
@@ -80,5 +82,13 @@ public class Order {
 
     public String getCountryCode() {
         return countryCode;
+    }
+
+    public double getCustomerLat() {
+        return customerLat;
+    }
+
+    public double getCustomerLng() {
+        return customerLng;
     }
 }

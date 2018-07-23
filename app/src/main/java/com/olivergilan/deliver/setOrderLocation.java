@@ -74,6 +74,7 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
     private ProgressBar progressBar;
 
     private Place pickupLocation;
+    private Place dropOffLocation;
 
     private int itemCount = 0;
     private ArrayList<Product> products;

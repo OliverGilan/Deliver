@@ -106,7 +106,8 @@ public class SignUp extends AppCompatActivity{
                             final FirebaseUser user = mAuth.getCurrentUser();
 //                            mRef.child(user.getUid()).setValue(user);
                             db.collection("users")
-                                    .add(user);
+                                    .document(user.getUid())
+                                    .set(user);
                             //mRef.child(user.getUid()).child("name").setValue(name);
                             user.sendEmailVerification().addOnCompleteListener(SignUp.this, new OnCompleteListener<Void>() {
                                 @Override

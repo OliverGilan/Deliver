@@ -81,6 +81,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
     private String orderRef;
 
     private Button startNavBtn;
+    private Button retrievedOrder;
     private TextView directionText;
     private LatLng start;
     private Boolean enRoute = false;
@@ -88,6 +89,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
     private Polyline initialPoly;
     private Polyline mainNavRoute;
     private LatLng destination;
+    private LatLng customerLocation;
     final String serverKey = "AIzaSyC2M-Riz_Eiq-OFaISvh3zAKLuLChhWgNE";
 
     @Override
@@ -98,21 +100,42 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
         startNavBtn = (Button) findViewById(R.id.startNav);
         directionText = (TextView) findViewById(R.id.directionText);
         database = FirebaseFirestore.getInstance();
+        retrievedOrder = (Button) findViewById(R.id.retrievedOrderBtn);
         Intent intent = getIntent();
         if(intent.hasExtra("ref")){
             orderRef = intent.getExtras().getString("ref");
             Log.i("PATH", orderRef);
         }
+        DocumentReference order = database.document(orderRef);
+        order.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                destination = new LatLng((double)documentSnapshot.get("latitude"), (double)documentSnapshot.get("longitude"));
+            }
+        });
 
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
                     if(enRoute){
+                        Location dest = new Location("Bearing");
+                        dest.setLatitude(destination.latitude);
+                        dest.setLongitude(destination.longitude);
+                        if(location.distanceTo(dest) < 100){
+                            retrievedOrder.setVisibility(View.VISIBLE);
+                            retrievedOrder.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    enRoute = false;
+                                    packageReceived = true;
+                                }
+                            });
+                        }
                         navigate(location, destination);
                         initialPoly.remove();
                     }if(packageReceived){
-
+                        navigate(location, customerLocation);
                     }
                 }
             };
