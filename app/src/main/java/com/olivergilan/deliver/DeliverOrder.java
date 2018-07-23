@@ -46,6 +46,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -81,6 +82,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_deliver_order);
 
+        startNavBtn = (Button) findViewById(R.id.startNav);
         database = FirebaseFirestore.getInstance();
         Intent intent = getIntent();
         if(intent.hasExtra("ref")){
@@ -192,6 +194,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
                 Log.i("PATH", "latitude:" + documentSnapshot.get("latitude").toString() + " Destination: " + destination.toString());
                 if(destination != null){
                     drawNavRoute(serverKey, start, destination);
+                    zoomToFit(start, destination);
                 }
                 map.addMarker(new MarkerOptions()
                 .position(destination)
@@ -226,5 +229,10 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
                         Log.e("PATH", "SHIT DIDNT WORK");
                     }
                 });
+    }
+
+    public void zoomToFit(LatLng start, LatLng destination){
+        LatLngBounds bounds = new LatLngBounds.Builder().include(start).include(destination).build();
+        map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));
     }
 }
