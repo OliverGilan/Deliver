@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:paddingLeft="10dp"
             android:text="Log Out"
-            android:visibility="gone"/>
+            android:visibility="visible"/>
 
         <fragment
             android:id="@+id/mapFragment"

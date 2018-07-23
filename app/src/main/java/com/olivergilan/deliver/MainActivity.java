@@ -107,7 +107,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mAuth = FirebaseAuth.getInstance();
         logOutBtn = (Button) findViewById(R.id.logOut);
         currentUser = mAuth.getCurrentUser();
+        Log.i("WHAT", currentUser.toString());
         if (currentUser == null) {
+            Log.i("WHAT", "PWHAT");
             startActivity(new Intent(this, SignUp.class));
         }
         storage = FirebaseStorage.getInstance();

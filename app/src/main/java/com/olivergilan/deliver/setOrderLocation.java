@@ -126,11 +126,10 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
 
-        db = FirebaseFirestore.getInstance();
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
                 .build();
-        db.setFirestoreSettings(settings);
+        db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
 

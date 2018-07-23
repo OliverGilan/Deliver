@@ -84,6 +84,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
     private TextView directionText;
     private LatLng start;
     private Boolean enRoute = false;
+    private Boolean packageReceived = false;
     private Polyline initialPoly;
     private Polyline mainNavRoute;
     private LatLng destination;
@@ -108,8 +109,10 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
             public void onLocationResult(LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
                     if(enRoute){
-                        navigate(location);
+                        navigate(location, destination);
                         initialPoly.remove();
+                    }if(packageReceived){
+
                     }
                 }
             };
@@ -264,7 +267,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
         map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));
     }
 
-    private void navigate(final Location loc){
+    private void navigate(final Location loc, final LatLng destination){
         GoogleDirection.withServerKey(serverKey)
                 .from(new LatLng(loc.getLatitude(), loc.getLongitude()))
                 .to(destination)
@@ -283,8 +286,8 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
                         mainNavRoute = map.addPolyline(polylineOptions);
                         List<Step> stepList = direction.getRouteList().get(0).getLegList().get(0).getStepList();
                         Location dest = new Location("Bearing");
-                        dest.setLatitude(destination.latitude);
-                        dest.setLongitude(destination.longitude);
+                        dest.setLatitude(stepList.get(0).getEndLocation().getLatitude());
+                        dest.setLongitude(stepList.get(0).getEndLocation().getLongitude());
                         CameraPosition update = new CameraPosition.Builder()
                                 .target(directionPointsList.get(1))
                                 .bearing(loc.bearingTo(new Location(dest)))
