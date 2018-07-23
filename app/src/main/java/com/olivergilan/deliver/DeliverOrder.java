@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.akexorcist.googledirection.DirectionCallback;
@@ -24,8 +25,11 @@ import com.akexorcist.googledirection.constant.Language;
 import com.akexorcist.googledirection.constant.TransportMode;
 import com.akexorcist.googledirection.constant.Unit;
 import com.akexorcist.googledirection.model.Direction;
+import com.akexorcist.googledirection.model.Info;
 import com.akexorcist.googledirection.model.Leg;
 import com.akexorcist.googledirection.model.Route;
+import com.akexorcist.googledirection.model.Step;
+import com.akexorcist.googledirection.request.DirectionTask;
 import com.akexorcist.googledirection.util.DirectionConverter;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -45,11 +49,13 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -60,6 +66,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener {
 
@@ -74,8 +81,13 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
     private String orderRef;
 
     private Button startNavBtn;
-
+    private TextView directionText;
     private LatLng start;
+    private Boolean enRoute = false;
+    private Polyline initialPoly;
+    private Polyline mainNavRoute;
+    private LatLng destination;
+    final String serverKey = "AIzaSyC2M-Riz_Eiq-OFaISvh3zAKLuLChhWgNE";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +95,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_deliver_order);
 
         startNavBtn = (Button) findViewById(R.id.startNav);
+        directionText = (TextView) findViewById(R.id.directionText);
         database = FirebaseFirestore.getInstance();
         Intent intent = getIntent();
         if(intent.hasExtra("ref")){
@@ -94,7 +107,10 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
-
+                    if(enRoute){
+                        navigate(location);
+                        initialPoly.remove();
+                    }
                 }
             };
         };
@@ -183,14 +199,13 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
         return false;
     }
 
-    public void getNavRoute(final LatLng start){
-        final String serverKey = "AIzaSyC2M-Riz_Eiq-OFaISvh3zAKLuLChhWgNE";
+    private void getNavRoute(final LatLng start){
         LatLng origin = start;
         DocumentReference ref = database.document(orderRef);
         ref.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
-                LatLng destination = new LatLng((double)documentSnapshot.get("latitude"), (double)documentSnapshot.get("longitude"));
+                destination = new LatLng((double)documentSnapshot.get("latitude"), (double)documentSnapshot.get("longitude"));
                 Log.i("PATH", "latitude:" + documentSnapshot.get("latitude").toString() + " Destination: " + destination.toString());
                 if(destination != null){
                     drawNavRoute(serverKey, start, destination);
@@ -204,7 +219,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    public void drawNavRoute(String key, LatLng start, LatLng destination){
+    private void drawNavRoute(String key, LatLng start, final LatLng destination){
         Log.i("PATH", "ACTIVATED: " + destination.toString());
         GoogleDirection.withServerKey(key)
                 .from(start)
@@ -215,13 +230,26 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
                 .unit(Unit.IMPERIAL)
                 .execute(new DirectionCallback() {
                     @Override
-                    public void onDirectionSuccess(Direction direction, String rawBody) {
+                    public void onDirectionSuccess(final Direction direction, String rawBody) {
                         Route route = direction.getRouteList().get(0);
                         Leg leg = route.getLegList().get(0);
-                        ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
+                        final ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
                         PolylineOptions polylineOptions = DirectionConverter.createPolyline(DeliverOrder.this, directionPositionList, 8, Color.BLUE);
-                        map.addPolyline(polylineOptions);
+                        initialPoly = map.addPolyline(polylineOptions);
                         Log.i("PATH", rawBody);
+                        startNavBtn.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                enRoute = true;
+                                startNavBtn.setVisibility(View.GONE);
+                                CameraPosition update = new CameraPosition.Builder()
+                                        .target(directionPositionList.get(1))
+                                        .bearing(0)
+                                        .tilt(15f).zoom(18f).build();
+                                map.moveCamera(CameraUpdateFactory.newCameraPosition(update));
+                                directionText.setVisibility(View.VISIBLE);
+                            }
+                        });
                     }
 
                     @Override
@@ -231,8 +259,45 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
                 });
     }
 
-    public void zoomToFit(LatLng start, LatLng destination){
+    private void zoomToFit(LatLng start, LatLng destination){
         LatLngBounds bounds = new LatLngBounds.Builder().include(start).include(destination).build();
         map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));
+    }
+
+    private void navigate(final Location loc){
+        GoogleDirection.withServerKey(serverKey)
+                .from(new LatLng(loc.getLatitude(), loc.getLongitude()))
+                .to(destination)
+                .transportMode(TransportMode.DRIVING)
+                .avoid(AvoidType.FERRIES)
+                .language(Language.ENGLISH)
+                .unit(Unit.IMPERIAL)
+                .execute(new DirectionCallback() {
+                    @Override
+                    public void onDirectionSuccess(Direction direction, String rawBody) {
+                        ArrayList<LatLng> directionPointsList = direction.getRouteList().get(0).getLegList().get(0).getDirectionPoint();
+                        PolylineOptions polylineOptions = DirectionConverter.createPolyline(DeliverOrder.this, directionPointsList, 8, Color.BLUE);
+                        if(mainNavRoute != null){
+                            mainNavRoute.remove();
+                        }
+                        mainNavRoute = map.addPolyline(polylineOptions);
+                        List<Step> stepList = direction.getRouteList().get(0).getLegList().get(0).getStepList();
+                        Location dest = new Location("Bearing");
+                        dest.setLatitude(destination.latitude);
+                        dest.setLongitude(destination.longitude);
+                        CameraPosition update = new CameraPosition.Builder()
+                                .target(directionPointsList.get(1))
+                                .bearing(loc.bearingTo(new Location(dest)))
+                                .tilt(60f).zoom(19f).build();
+                        map.animateCamera(CameraUpdateFactory.newCameraPosition(update));
+                        Info distance = stepList.get(0).getDistance();
+                        directionText.setText(stepList.get(1).getManeuver() + " in " + distance.getText());
+                    }
+
+                    @Override
+                    public void onDirectionFailure(Throwable t) {
+
+                    }
+                });
     }
 }
