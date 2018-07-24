@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -44,6 +45,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
@@ -70,7 +72,9 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
     private LinearLayout confirmPanel;
     private Button confirmPickup, denyPickup, placeOrder;
     private RelativeLayout orderSummary;
-    private TextView itemSummary, costSummary;
+    private LinearLayout confirmDropPanel;
+    private Button denyDrop, acceptDrop;
+    private TextView itemSummary, costSummary, dropOffSummary;
     private ProgressBar progressBar;
 
     private Place pickupLocation;
@@ -117,6 +121,9 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
             Log.i("Deliver", p.getName().toString());
         }
 
+        acceptDrop = (Button) findViewById(R.id.acceptDrop);
+        denyDrop = (Button) findViewById(R.id.denyDrop);
+        confirmDropPanel = (LinearLayout) findViewById(R.id.confirmDropPanel);
         confirmPanel = (LinearLayout) findViewById(R.id.confirmPanel);
         confirmPickup = (Button) findViewById(R.id.confirmBtn);
         denyPickup = (Button) findViewById(R.id.denyBtn);
@@ -124,6 +131,7 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
         orderSummary = (RelativeLayout) findViewById(R.id.orderSummary);
         itemSummary = (TextView) findViewById(R.id.itemSummary);
         costSummary = (TextView) findViewById(R.id.totalCostSummary);
+        dropOffSummary = (TextView) findViewById(R.id.dropOffSummary);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
 
@@ -272,14 +280,14 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
         mLocationRequest.setFastestInterval(1000);
     }
 
-    public void updateLocation(Location location){
+    private void updateLocation(Location location){
         setBoundsBias(location);
         LatLng pos = new LatLng(location.getLatitude(), location.getLongitude());
         CameraUpdate update = CameraUpdateFactory.newLatLngZoom(pos, 15);
         map.animateCamera(update);
     }
 
-    public void selectPickup(final Place LOCATION){
+    private void selectPickup(final Place LOCATION){
         CameraUpdate update = CameraUpdateFactory.newLatLngZoom(LOCATION.getLatLng(), 15);
         map.animateCamera(update);
         confirmPanel.setVisibility(View.VISIBLE);
@@ -296,8 +304,9 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
             public void onClick(View view) {
                 pickupLocation = LOCATION;
                 confirmPanel.setVisibility(View.GONE);
-                resizeFragment(fragment, LinearLayout.LayoutParams.MATCH_PARENT, 500);
-                confirmOrder();
+                selectDropOff();
+//                resizeFragment(fragment, LinearLayout.LayoutParams.MATCH_PARENT, 500);
+//                confirmOrder();
             }
         });
     }
@@ -306,7 +315,58 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
 
     }
 
-    public void resizeFragment(MapFragment f, int newWidth, int newHeight){
+    private void selectDropOff(){
+        autocompleteFragment.setOnPlaceSelectedListener(null);
+        CameraPosition update = new CameraPosition.Builder()
+                .target(new LatLng((double) mCurrentLocation.getLatitude(), (double) mCurrentLocation.getLongitude()))
+                .zoom(16f)
+                .build();
+        map.animateCamera(CameraUpdateFactory.newCameraPosition(update));
+        AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
+                .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ADDRESS)
+                .build();
+        autocompleteFragment.setText("");
+        autocompleteFragment.setFilter(typeFilter);
+        autocompleteFragment.setHint("Select dropoff location");
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(final Place place) {
+                CameraUpdate update = CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 15);
+                map.animateCamera(update);
+                if(dropOffMarker != null){
+                    dropOffMarker.remove();
+                }
+                dropOffMarker = map.addMarker(new MarkerOptions()
+                        .position(place.getLatLng())
+                        .title("Drop Off")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
+                confirmDropPanel.setVisibility(View.VISIBLE);
+                denyDrop.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dropOffMarker.remove();
+                        confirmDropPanel.setVisibility(View.GONE);
+                    }
+                });
+                acceptDrop.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dropOffLocation = place;
+                        confirmDropPanel.setVisibility(View.GONE);
+                        resizeFragment(fragment, LinearLayout.LayoutParams.MATCH_PARENT, 500);
+                        confirmOrder();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Status status) {
+
+            }
+        });
+    }
+
+    private void resizeFragment(MapFragment f, int newWidth, int newHeight){
         if(f != null){
             View view = f.getView();
             ConstraintLayout.LayoutParams p = new ConstraintLayout.LayoutParams(newWidth, newHeight);
@@ -315,7 +375,7 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
         }
     }
 
-    public void confirmOrder(){
+    private void confirmOrder(){
         LatLng coordinates = pickupLocation.getLatLng();
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         List<Address> addresses = null;
@@ -330,12 +390,13 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
         final Address address = addresses.get(0);
         orderSummary.setVisibility(View.VISIBLE);
         itemSummary.setText(itemCount + " items from " + pickupLocation.getName());
+        dropOffSummary.setText("For: " + dropOffLocation.getAddress().toString());
         costSummary.setText("Estimated cost: $ " + (cost+1));
         placeOrder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 progressBar.setVisibility(View.VISIBLE);
-                Order newOrder = new Order(products, pickupLocation, currentUser.getUid(), address.getCountryCode().toString());
+                Order newOrder = new Order(products, pickupLocation, dropOffLocation, currentUser.getUid(), address.getCountryCode().toString());
                 db.collection("allOrders")
                         .document(newOrder.getCountryCode())
                         .collection("pendingOrders")

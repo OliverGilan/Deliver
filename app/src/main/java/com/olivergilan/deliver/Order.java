@@ -21,7 +21,7 @@ public class Order {
     private String countryCode;
 
 
-    public Order(ArrayList<Product> products, Place pickup, String user, String country){
+    public Order(ArrayList<Product> products, Place pickup, Place dropOff, String user, String country){
         items = products;
         itemCount = items.size();
         for (Product item: items) {
@@ -32,6 +32,8 @@ public class Order {
         latitude = pickup.getLatLng().latitude;
         customer = user;
         countryCode = country;
+        customerLat = dropOff.getLatLng().latitude;
+        customerLng = dropOff.getLatLng().longitude;
     }
 
     public Order(ArrayList<Product> products, double mlong, double mlat, String user){
