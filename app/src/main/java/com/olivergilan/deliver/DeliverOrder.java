@@ -111,6 +111,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 destination = new LatLng((double)documentSnapshot.get("latitude"), (double)documentSnapshot.get("longitude"));
+                customerLocation = new LatLng((double)documentSnapshot.get("customerLat"), (double)documentSnapshot.get("customerLng"));
             }
         });
 
@@ -129,12 +130,26 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
                                 public void onClick(View view) {
                                     enRoute = false;
                                     packageReceived = true;
+                                    retrievedOrder.setVisibility(View.GONE);
                                 }
                             });
                         }
                         navigate(location, destination);
                         initialPoly.remove();
                     }if(packageReceived){
+                        Location dest = new Location("Bearing");
+                        dest.setLatitude(customerLocation.latitude);
+                        dest.setLongitude(customerLocation.longitude);
+                        if(location.distanceTo(dest) < 100){
+                            retrievedOrder.setVisibility(View.VISIBLE);
+                            retrievedOrder.setText("Alert Customer");
+                            retrievedOrder.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    //Send alert to customer
+                                }
+                            });
+                        }
                         navigate(location, customerLocation);
                     }
                 }
@@ -317,7 +332,11 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
                                 .tilt(60f).zoom(19f).build();
                         map.animateCamera(CameraUpdateFactory.newCameraPosition(update));
                         Info distance = stepList.get(0).getDistance();
-                        directionText.setText(stepList.get(1).getManeuver() + " in " + distance.getText());
+                        if(stepList.size() > 1){
+                            directionText.setText(stepList.get(1).getManeuver() + " in " + distance.getText());
+                        }else{
+                            directionText.setText("Continue straight to destination...");
+                        }
                     }
 
                     @Override

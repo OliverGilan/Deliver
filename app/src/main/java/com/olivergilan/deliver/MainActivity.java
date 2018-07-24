@@ -404,36 +404,36 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void isOrderActive(Location location){
-//        LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
-//        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-//        List<Address> addresses = null;
-//        orders = new ArrayList<Marker>();
-//        try {
-//            addresses = geocoder.getFromLocation(
-//                    coordinates.latitude,
-//                    coordinates.longitude,
-//                    1);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        final Address address = addresses.get(0);
-//        database.collection("allOrders")
-//                .document(address.getCountryCode().toString())
-//                .collection("activeOrders")
-//                .get()
-//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                        if(task.isSuccessful()){
-//                            for (QueryDocumentSnapshot document: task.getResult()){
-//                                Order o = document.toObject(Order.class);
-//                                if(o.getCustomer().matches(currentUser.getUid())){
-//                                    showOrderAlert();
-//                                }
-//                            }
-//                        }
-//                    }
-//                });
+        LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        List<Address> addresses = null;
+        orders = new ArrayList<Marker>();
+        try {
+            addresses = geocoder.getFromLocation(
+                    coordinates.latitude,
+                    coordinates.longitude,
+                    1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        final Address address = addresses.get(0);
+        database.collection("allOrders")
+                .document(address.getCountryCode().toString())
+                .collection("activeOrders")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if(task.isSuccessful()){
+                            for (QueryDocumentSnapshot document: task.getResult()){
+                                Order o = document.toObject(Order.class);
+                                if(o.getCustomer().matches(currentUser.getUid())){
+                                    showOrderAlert();
+                                }
+                            }
+                        }
+                    }
+                });
     }
 
     public void showOrderAlert(){
