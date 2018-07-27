@@ -48,7 +48,9 @@
 
         <activity android:name=".ListItems" />
         <activity android:name=".setOrderLocation" />
-        <activity android:name=".DeliverOrder"></activity>
+        <activity android:name=".DeliverOrder" />
+        <activity android:name=".FollowOrder" />
+        <activity android:name=".OrderChat"></activity>
     </application>
 
 </manifest>

@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -60,6 +61,8 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.collection.LLRBNode;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -71,6 +74,8 @@ import java.util.List;
 public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener {
 
     GoogleMap map;
+    private FirebaseAuth mAuth;
+    private FirebaseUser mCurrentUser;
     private FirebaseFirestore database;
     private Location mCurrentLocation;
     private FusedLocationProviderClient mFusedLocationClient;
@@ -79,6 +84,9 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
     final int REQUEST_LOCATION = 1;
     final int REQUEST_CHECK_SETTINGS = 2;
     private String orderRef;
+
+    private String chatPath;
+    private ImageView chatBtn;
 
     private Button startNavBtn;
     private Button retrievedOrder;
@@ -98,6 +106,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_deliver_order);
 
         startNavBtn = (Button) findViewById(R.id.startNav);
+        chatBtn = (ImageView) findViewById(R.id.chatBtn);
         directionText = (TextView) findViewById(R.id.directionText);
         database = FirebaseFirestore.getInstance();
         retrievedOrder = (Button) findViewById(R.id.retrievedOrderBtn);
@@ -112,6 +121,21 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 destination = new LatLng((double)documentSnapshot.get("latitude"), (double)documentSnapshot.get("longitude"));
                 customerLocation = new LatLng((double)documentSnapshot.get("customerLat"), (double)documentSnapshot.get("customerLng"));
+            }
+        });
+
+        //Create chat
+        mAuth = FirebaseAuth.getInstance();
+        mCurrentUser = mAuth.getCurrentUser();
+        chatPath = intent.getExtras().getString("chatPath");
+        ChatMessage initialMessage = new ChatMessage("On my way to your order!", mCurrentUser.getDisplayName(), null);
+        ChatData chat = new ChatData(initialMessage);
+        database.document(chatPath).set(chat);
+        chatBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent chatIntent = new Intent(DeliverOrder.this, OrderChat.class);
+                startActivity(chatIntent);
             }
         });
 
