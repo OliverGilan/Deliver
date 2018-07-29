@@ -19,6 +19,13 @@ public class ChatMessage {
         this.next = next;
     }
 
+    public ChatMessage(){
+        message = "";
+        sender = "";
+        timeStamp = 0;
+        next = null;
+    }
+
     public String getMessage() {
         return message;
     }
@@ -29,6 +36,10 @@ public class ChatMessage {
 
     public int getTimeStamp() {
         return timeStamp;
+    }
+
+    public String toString(){
+        return sender+": "+message;
     }
 
 }

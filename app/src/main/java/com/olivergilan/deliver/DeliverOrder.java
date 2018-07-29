@@ -128,13 +128,14 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
         mAuth = FirebaseAuth.getInstance();
         mCurrentUser = mAuth.getCurrentUser();
         chatPath = intent.getExtras().getString("chatPath");
-        ChatMessage initialMessage = new ChatMessage("On my way to your order!", mCurrentUser.getDisplayName(), null);
+        ChatMessage initialMessage = new ChatMessage("On my way to your order!", "Oliver", null);
         ChatData chat = new ChatData(initialMessage);
         database.document(chatPath).set(chat);
         chatBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent chatIntent = new Intent(DeliverOrder.this, OrderChat.class);
+                chatIntent.putExtra("path", chatPath);
                 startActivity(chatIntent);
             }
         });

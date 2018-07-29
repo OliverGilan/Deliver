@@ -233,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             Intent intent = new Intent(MainActivity.this, DeliverOrder.class);
                             String ref = "allOrders/" + order.getCountryCode() + "/activeOrders/" + id;
                             intent.putExtra("ref", ref);
-                            intent.putExtra("chatPath", "chats/" + order.getCountryCode() + "/" + id);
+                            intent.putExtra("chatPath", "allOrders/" + order.getCountryCode() + "/chats/" + id);
                             startActivity(intent);
                         }
                     });
@@ -427,7 +427,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if(task.isSuccessful()){
                             for (QueryDocumentSnapshot document: task.getResult()){
-                                String chatPath = "chats/" + address.getCountryCode() + "/" + document.getId();
+                                String chatPath = "allOrders/" + address.getCountryCode() + "/chats/" + document.getId();
                                 Order o = document.toObject(Order.class);
                                 if(o.getCustomer().matches(currentUser.getUid())){
                                     showOrderAlert(chatPath);
