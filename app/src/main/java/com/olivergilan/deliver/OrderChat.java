@@ -54,6 +54,10 @@ public class OrderChat extends AppCompatActivity {
 
         loadMessages();
 
+        if(getIntent().hasExtra("arrived")){
+            messageCompose.setText("I have arrived with your package!");
+        }
+
         sendBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

@@ -162,6 +162,7 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
                         navigate(location, destination);
                         initialPoly.remove();
                     }if(packageReceived){
+                        map.addMarker(new MarkerOptions().position(customerLocation).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)).title("customer"));
                         Location dest = new Location("Bearing");
                         dest.setLatitude(customerLocation.latitude);
                         dest.setLongitude(customerLocation.longitude);
@@ -172,6 +173,11 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
                                 @Override
                                 public void onClick(View view) {
                                     //Send alert to customer
+                                    Intent deliverIntent = new Intent(DeliverOrder.this, OrderChat.class);
+                                    deliverIntent.putExtra("arrived", true);
+                                    deliverIntent.putExtra("path", chatPath);
+                                    deliverIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                                    startActivity(deliverIntent);
                                 }
                             });
                         }
