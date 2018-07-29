@@ -6,4 +6,35 @@
     android:layout_height="match_parent"
     tools:context=".OrderChat">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        android:orientation="vertical">
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/messageList"></ListView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/messageTextEdit"
+                android:layout_weight="1"/>
+            <ImageButton
+                android:layout_width="70dp"
+                android:layout_height="50dp"
+                android:layout_toRightOf="@id/messageTextEdit"
+                android:src="@drawable/send_message"/>
+        </LinearLayout>
+
+
+    </LinearLayout>
+
 </android.support.constraint.ConstraintLayout>
