@@ -12,10 +12,11 @@
 
         <Button
             android:id="@+id/logOut"
-            android:layout_width="wrap_content"
+            android:layout_width="60dp"
             android:layout_height="wrap_content"
             android:paddingLeft="10dp"
             android:text="Log Out"
+            android:layout_marginTop="10dp"
             android:visibility="visible"/>
 
         <fragment
@@ -30,12 +31,24 @@
             android:id="@+id/chooseItems"
             android:layout_width="match_parent"
             android:layout_height="45dp"
-            android:layout_marginLeft="10dp"
+            android:layout_marginLeft="60dp"
             android:layout_marginRight="60dp"
             android:layout_marginTop="10dp"
             android:shadowRadius="0"
             android:background="#ffff"
             android:hint="What items do you want delivered?" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:background="#fff"
+            android:text="Your Order Is being fullfilled!
+Click for current status."
+            android:textAlignment="center"
+            android:id="@+id/alert"
+            android:layout_below="@id/chooseItems"
+            android:layout_margin="10dp"
+            android:visibility="gone"/>
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -67,19 +80,6 @@
                 android:text="Accept Order"
                 android:id="@+id/acceptOrder" />
         </RelativeLayout>
-        
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_alignParentBottom="true"
-            android:background="#fff"
-            android:layout_marginBottom="250px"
-            android:text="Your Order Is being fullfilled!
-Click for current status."
-            android:textAlignment="center"
-            android:id="@+id/alert"
-            android:layout_above="@id/orderSummary"
-            android:visibility="gone"/>
 
     </RelativeLayout>
 

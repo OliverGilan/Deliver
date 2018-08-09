@@ -11,6 +11,15 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <!--<fragment-->
+            <!--android:id="@+id/mapFragmentSmall"-->
+            <!--android:name="com.google.android.gms.maps.MapFragment"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="200dp"-->
+            <!--android:layout_marginTop="0dp"-->
+            <!--android:layout_alignParentTop="true"-->
+            <!--android:layout_centerHorizontal="true" />-->
+
         <ListView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
