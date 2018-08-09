@@ -48,9 +48,12 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
@@ -60,6 +63,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import javax.annotation.Nullable;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback,
         GoogleMap.OnMyLocationButtonClickListener {
@@ -132,7 +137,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 for (Location location : locationResult.getLocations()) {
 //                   updateLocation(location);
                     isOrderActive(location);
-                    getOrders(location);
                 }
             };
         };
@@ -378,7 +382,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    public void getOrders(Location location){
+    public void getOrders(final Location location){
         map.clear();
         LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
@@ -415,6 +419,32 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         } else {
                             Log.d("Whoops", "Error getting documents: ", task.getException());
+                        }
+                    }
+                });
+        database.collection("allOrders")
+                .document(address.getCountryCode().toString())
+                .collection("pendingOrders")
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                        if (e != null) {
+                            Log.w("ORDERS", "Listen failed.", e);
+                            return;
+                        }
+                        for(DocumentChange dc: queryDocumentSnapshots.getDocumentChanges()){
+                            switch (dc.getType()) {
+                                case ADDED:
+                                    break;
+                                case MODIFIED:
+                                    Log.d("ORDERS", "Modified Order: " + dc.getDocument().getData());
+                                    break;
+                                case REMOVED:
+                                    Log.d("ORDERS", "Removed Order: " + dc.getDocument().getData());
+                                    getOrders(location);
+                                    break;
+
+                            }
                         }
                     }
                 });

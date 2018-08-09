@@ -56,6 +56,8 @@ public class OrderChat extends AppCompatActivity {
 
         if(getIntent().hasExtra("arrived")){
             messageCompose.setText("I have arrived with your package!");
+            sendMessage();
+            alert();
         }
 
         sendBtn.setOnClickListener(new View.OnClickListener() {
@@ -98,5 +100,9 @@ public class OrderChat extends AppCompatActivity {
             messageCompose.setText("");
             loadMessages();
         }
+    }
+
+    private void alert(){
+        database.document(chatRef).update("Arrived", true);
     }
 }
