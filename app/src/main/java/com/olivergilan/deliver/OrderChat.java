@@ -92,7 +92,7 @@ public class OrderChat extends AppCompatActivity {
             Toast.makeText(this, "Cannot send empty message!", Toast.LENGTH_SHORT);
         }else{
             String message = messageCompose.getText().toString().trim();
-            ChatMessage chatMessage = new ChatMessage(message, mCurrentUser.getEmail(), chatData.getHead());
+            ChatMessage chatMessage = new ChatMessage(message, mCurrentUser.getDisplayName(), chatData.getHead());
             chatData.addMessage(chatMessage);
             database.document(chatRef).set(chatData);
             messageCompose.setText("");

@@ -132,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 for (Location location : locationResult.getLocations()) {
 //                   updateLocation(location);
                     isOrderActive(location);
+                    getOrders(location);
                 }
             };
         };
@@ -241,6 +242,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     .collection("activeOrders")
                                     .document(id)
                                     .set(order);
+                            database.collection("allOrders")
+                                    .document(order.getCountryCode())
+                                    .collection("pendingOrders")
+                                    .document(id).delete();
                             Intent intent = new Intent(MainActivity.this, DeliverOrder.class);
                             String ref = "allOrders/" + order.getCountryCode() + "/activeOrders/" + id;
                             intent.putExtra("ref", ref);
