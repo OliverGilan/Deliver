@@ -94,6 +94,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        if(currentUser == null){
+            Log.i("USER", "NULL");
+        }
+        if (currentUser == null) {
+            Log.i("USER", "CHANGED");
+            startActivity(new Intent(this, SignUp.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+            MainActivity.this.finish();
+            killActivity();
+        }
+
         Intent intent = getIntent();
         if(intent.hasExtra("status")){
             activeOrder = intent.getExtras().getBoolean("status");
@@ -104,14 +116,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         database = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
         logOutBtn = (Button) findViewById(R.id.logOut);
-        currentUser = mAuth.getCurrentUser();
-        Log.i("WHAT", currentUser.toString());
-        if (currentUser == null) {
-            Log.i("WHAT", "PWHAT");
-            startActivity(new Intent(this, SignUp.class));
-        }
+
         storage = FirebaseStorage.getInstance();
         sRef = storage.getReference();
         selectItems = (EditText) findViewById(R.id.chooseItems);
@@ -144,6 +150,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 startActivity(new Intent(MainActivity.this, SignUp.class));
             }
         });
+    }
+
+    private void killActivity(){
+        Log.i("USER", "KILL");
+        finish();
     }
 
     public boolean googleServicesAvailable() {
@@ -429,8 +440,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             for (QueryDocumentSnapshot document: task.getResult()){
                                 String chatPath = "allOrders/" + address.getCountryCode() + "/chats/" + document.getId();
                                 Order o = document.toObject(Order.class);
-                                if(o.getCustomer().matches(currentUser.getUid())){
-                                    showOrderAlert(chatPath);
+                                if(currentUser != null){
+                                    if(o.getCustomer().matches(currentUser.getUid())){
+                                        showOrderAlert(chatPath);
+                                    }
                                 }
                             }
                         }

@@ -32,11 +32,11 @@ public class SignUp extends AppCompatActivity{
     private FirebaseAuth mAuth;
     private FirebaseDatabase database;
     private FirebaseFirestore db;
-    DatabaseReference mRef;
-    EditText email, password, name;
-    Button signUpBtn;
-    TextView loginBtn;
-    ProgressBar progressbar;
+    private DatabaseReference mRef;
+    private EditText email, password, name;
+    private Button signUpBtn;
+    private TextView loginBtn;
+    private ProgressBar progressbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +73,13 @@ public class SignUp extends AppCompatActivity{
     public void registerUser() {
         String email = this.email.getText().toString().trim();
         String password = this.password.getText().toString().trim();
+        final String username = this.name.getText().toString().trim();
 
+        if(username.isEmpty()){
+            this.name.setError("Name is required");
+            this.name.requestFocus();
+            return;
+        }
         if(email.isEmpty()){
             this.email.setError("Email is required");
             this.email.requestFocus();
@@ -104,10 +110,18 @@ public class SignUp extends AppCompatActivity{
                         if(task.isSuccessful()){
                             progressbar.setVisibility(View.INVISIBLE);
                             final FirebaseUser user = mAuth.getCurrentUser();
-//                            mRef.child(user.getUid()).setValue(user);
-                            db.collection("users")
-                                    .document(user.getUid())
-                                    .set(user);
+                            user.updateProfile(new UserProfileChangeRequest.Builder().setDisplayName(username).build())
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            Log.i("USER", username + " : " + user.getDisplayName());
+//                                          mRef.child(user.getUid()).setValue(user);
+                                            db.collection("users")
+                                                    .document(user.getUid())
+                                                    .set(user);
+                                        }
+                                    });
+
                             //mRef.child(user.getUid()).child("name").setValue(name);
                             user.sendEmailVerification().addOnCompleteListener(SignUp.this, new OnCompleteListener<Void>() {
                                 @Override
@@ -115,9 +129,9 @@ public class SignUp extends AppCompatActivity{
                                     Toast.makeText(getApplicationContext(), "Verification Email Sent", Toast.LENGTH_SHORT).show();
                                 }
                             });
-                            String mName = name.getText().toString().trim();
-                            Intent intent = new Intent(SignUp.this, buildProfile.class);
-                            intent.putExtra("username", mName);
+//                            String mName = name.getText().toString().trim();
+                            Intent intent = new Intent(SignUp.this, MainActivity.class);
+//                            intent.putExtra("username", mName);
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                             startActivity(intent);
                         }else{
