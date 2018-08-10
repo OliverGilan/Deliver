@@ -120,8 +120,6 @@ public class ListItems extends AppCompatActivity {
 
                     products.add(product);
                     arrayAdapter.add(product);
-//                    items.add(product.getName());
-//                    costs.add(product.getCost());
 
                     nameItem.setText("");
                     itemCost.setText("");

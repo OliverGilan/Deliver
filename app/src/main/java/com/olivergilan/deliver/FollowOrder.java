@@ -111,7 +111,6 @@ public class FollowOrder extends AppCompatActivity {
                             receivedOrderBtn.setVisibility(View.VISIBLE);
                         }
                         chatData = document.toObject(ChatData.class);
-                        Log.i("CHAT", chatData.getHead().toString());
                         adapter = new ChatAdapter(FollowOrder.this, chatData);
                         chatList.setAdapter(adapter);
                     } else {

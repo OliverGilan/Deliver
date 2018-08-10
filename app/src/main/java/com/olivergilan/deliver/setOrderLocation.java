@@ -118,7 +118,6 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
         for(Product p: products){
             itemCount++;
             cost += p.getCost();
-            Log.i("Deliver", p.getName().toString());
         }
 
         acceptDrop = (Button) findViewById(R.id.acceptDrop);
@@ -177,7 +176,6 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
             @Override
             public void onError(Status status) {
                 //Error
-                System.out.println("Error selecting place");
             }
         });
 
@@ -206,7 +204,6 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        //Toast.makeText(this, "Ready", Toast.LENGTH_LONG).show();
         MapStyleOptions style = MapStyleOptions.loadRawResourceStyle(this, R.raw.mapstyle_grayscale);
         map.setMapStyle(style);
 
@@ -241,14 +238,11 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
                     });
             createLocationRequest();
             mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-            //map.setMyLocationEnabled(true);
-            //map.setOnMyLocationButtonClickListener(this);
             LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                     .addLocationRequest(mLocationRequest);
             LocationSettingsRequest.Builder settingsBuilder = new LocationSettingsRequest.Builder();
             SettingsClient client = LocationServices.getSettingsClient(this);
             Task<LocationSettingsResponse> task = client.checkLocationSettings(settingsBuilder.build());
-
             task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
                 @SuppressLint("MissingPermission")
                 @Override
@@ -256,7 +250,6 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
 
                 }
             });
-
             task.addOnFailureListener(this, new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
@@ -305,8 +298,6 @@ public class setOrderLocation extends AppCompatActivity implements OnMapReadyCal
                 pickupLocation = LOCATION;
                 confirmPanel.setVisibility(View.GONE);
                 selectDropOff();
-//                resizeFragment(fragment, LinearLayout.LayoutParams.MATCH_PARENT, 500);
-//                confirmOrder();
             }
         });
     }

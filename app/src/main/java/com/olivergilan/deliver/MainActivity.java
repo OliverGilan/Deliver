@@ -101,11 +101,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
-        if(currentUser == null){
-            Log.i("USER", "NULL");
-        }
         if (currentUser == null) {
-            Log.i("USER", "CHANGED");
             startActivity(new Intent(this, SignUp.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
             MainActivity.this.finish();
             killActivity();
@@ -117,7 +113,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         if(intent.hasExtra("order")){
             orderRef = intent.getExtras().getString("order");
-            Log.i("PATH", orderRef);
         }
 
         database = FirebaseFirestore.getInstance();
@@ -144,24 +139,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mapInit();
         }
 
-        /*
-        Delete This when done
-         */
+        //
+        //Button to log out of account
+        //
         logOutBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mAuth.signOut();
                 currentUser.delete();
-                startActivity(new Intent(MainActivity.this, SignUp.class));
+                startActivity(new Intent(MainActivity.this, SignUp.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
             }
         });
     }
 
+    //Kills Activity
     private void killActivity(){
-        Log.i("USER", "KILL");
         finish();
     }
 
+    /**
+     * Checks if device is connected to Google Services
+     * @return boolean if Google Services is connected and available
+     */
     public boolean googleServicesAvailable() {
         GoogleApiAvailability api = GoogleApiAvailability.getInstance();
         int isAvailable = api.isGooglePlayServicesAvailable(this);
@@ -176,17 +175,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return false;
     }
 
+    /**
+     * Initiates map fragment
+     */
     private void mapInit() {
         MapFragment fragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
         fragment.getMapAsync(this);
     }
 
+    /**
+     * Callback method when map is ready. Styles and sets up main map for user
+     * @param googleMap map to be passed to fragment
+     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        //
+        //Apply map to fragment, set style
+        //
         map = googleMap;
         MapStyleOptions style = MapStyleOptions.loadRawResourceStyle(this, R.raw.mapstyle_grayscale);
         map.setMapStyle(style);
 
+        //Checks if location permissions are granted on device
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -201,13 +211,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                                 REQUEST_LOCATION);
         } else {
 
+            //
+            // Gets initial user location
+            //
             mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
             mFusedLocationClient.getLastLocation()
                     .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
                             mCurrentLocation = location;
+
+                            //Gets pending orders for map
                             getOrders(mCurrentLocation);
+
+                            //Checks if user has just placed an order
+                            //if true, camera focuses on order
+                            //else, camera focuses on user
                             if(activeOrder==true) {
                                 focusOnOrder();
                             }else{
@@ -217,35 +236,50 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         }
                     });
+
+            //Creates Fused Location Client for continuous location updates
             createLocationRequest();
             mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
+
+            //Enables Maps API location handler
             map.setMyLocationEnabled(true);
             map.setOnMyLocationButtonClickListener(this);
+
+            //Disables marker clicks
             map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                 @Override
                 public boolean onMarkerClick(Marker marker) {
-                    Log.i("CHICKEN", "ORDER CLICKED");
                     return false;
                 }
             });
+
+            //Sets Marker info window click activity
             map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
                 @Override
                 public void onInfoWindowClick(Marker marker) {
                     MarkerTag tag = (MarkerTag) marker.getTag();
                     final Order order = tag.getOrder();
                     final String id = tag.getId();
+
+                    //Shows order confirmation panel
                     acceptOrderPanel.setVisibility(View.VISIBLE);
                     itemSummary.setText(order.getItemCount() + " items from " + order.getPickupLocation());
                     estimatedCost.setText("Estimated cost: $" + order.getTotalCost());
                     acceptOrder = (Button) findViewById(R.id.acceptOrder);
+
+                    //When order is accepted by a user
                     acceptOrder.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
+
+                            //Adds order to Active Order database
                             database.collection("allOrders")
                                     .document(order.getCountryCode())
                                     .collection("activeOrders")
                                     .document(id)
                                     .set(order);
+
+                            //Removes order from Pending Order database
                             database.collection("allOrders")
                                     .document(order.getCountryCode())
                                     .collection("pendingOrders")
@@ -253,18 +287,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             Intent intent = new Intent(MainActivity.this, DeliverOrder.class);
                             String ref = "allOrders/" + order.getCountryCode() + "/activeOrders/" + id;
                             intent.putExtra("ref", ref);
-                            intent.putExtra("chatPath", "allOrders/" + order.getCountryCode() + "/chats/" + id);
+                            intent.putExtra("chatPath", "allOrders/" + order.getCountryCode() + "/chats/" + id);    //Path for order chat
                             startActivity(intent);
                         }
                     });
                 }
             });
+
+            //Closes confirmation panel if order is denied
             map.setOnInfoWindowCloseListener(new GoogleMap.OnInfoWindowCloseListener() {
                 @Override
                 public void onInfoWindowClose(Marker marker) {
                     acceptOrderPanel.setVisibility(View.GONE);
                 }
             });
+
+            //Starts activity to create order
             selectItems.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -272,13 +310,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             });
 
-
+            //This doesn't need to exist I believe. Possibly redundant
             LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                     .addLocationRequest(mLocationRequest);
             LocationSettingsRequest.Builder settingsBuilder = new LocationSettingsRequest.Builder();
             SettingsClient client = LocationServices.getSettingsClient(this);
             Task<LocationSettingsResponse> task = client.checkLocationSettings(settingsBuilder.build());
-
             task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
                 @SuppressLint("MissingPermission")
                 @Override
@@ -286,7 +323,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 }
             });
-
             task.addOnFailureListener(this, new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
@@ -344,14 +380,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mLocationRequest.setFastestInterval(1000);
     }
 
+    /**
+     * Orients camera on user in event that they are moving
+     * @param location location of user
+     */
     public void updateLocation(Location location){
         LatLng pos = new LatLng(location.getLatitude(), location.getLongitude());
         CameraUpdate update = CameraUpdateFactory.newLatLngZoom(pos, 15);
         map.animateCamera(update);
     }
 
-    /*
-     * Center map on user Order
+    /**
+     * Focuses camera on user order in event that it was recently placed
      */
     public void focusOnOrder(){
         DocumentReference orderReferance = database.document(orderRef);
@@ -361,7 +401,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (task.isSuccessful()) {
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
-                        Log.d("Order Focus", "DocumentSnapshot data: " + document.getData());
+
+                        //Convert database document to Order object to get location and orient camera on it
                         Order order = document.toObject(Order.class);
                         LatLng coordinates = new LatLng(document.getDouble("latitude"), document.getDouble("longitude"));
                         CameraUpdate update = CameraUpdateFactory.newLatLngZoom(coordinates, 15);
@@ -382,8 +423,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
+    /**
+     * Grabs all orders within vicinity of user and places them on map as markers
+     * @param location user location
+     */
     public void getOrders(final Location location){
         map.clear();
+
+        //Creates Address object to later retrieve country code of user
         LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         List<Address> addresses = null;
@@ -397,6 +444,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             e.printStackTrace();
         }
         final Address address = addresses.get(0);
+
+        //Gets all orders from Pending Orders Database
         database.collection("allOrders")
                 .document(address.getCountryCode().toString())
                 .collection("pendingOrders")
@@ -406,7 +455,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.i("CHICKEN", document.get("latitude").toString());
+
+                                //Take order reference and turn it into Order object & marker
                                 Order o = document.toObject(Order.class);
                                 String id = document.getId();
                                 MarkerTag tag = new MarkerTag(id, o);
@@ -422,6 +472,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     }
                 });
+
+        //Snapshot listener of Pending Orders to update map with current orders
+        //Removes taken orders from map
         database.collection("allOrders")
                 .document(address.getCountryCode().toString())
                 .collection("pendingOrders")
@@ -437,10 +490,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 case ADDED:
                                     break;
                                 case MODIFIED:
-                                    Log.d("ORDERS", "Modified Order: " + dc.getDocument().getData());
                                     break;
                                 case REMOVED:
-                                    Log.d("ORDERS", "Removed Order: " + dc.getDocument().getData());
                                     getOrders(location);
                                     break;
 
@@ -450,7 +501,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 });
     }
 
+
+    /**
+     * Checks if user has order being fulfilled
+     * @param location user location
+     */
     public void isOrderActive(Location location){
+
+        //Address Object to later retrieve user country code
         LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         List<Address> addresses = null;
@@ -464,6 +522,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             e.printStackTrace();
         }
         final Address address = addresses.get(0);
+
+        //Retrieves all active orders
         database.collection("allOrders")
                 .document(address.getCountryCode().toString())
                 .collection("activeOrders")
@@ -476,6 +536,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 String chatPath = "allOrders/" + address.getCountryCode() + "/chats/" + document.getId();
                                 Order o = document.toObject(Order.class);
                                 if(currentUser != null){
+
+                                    //Checks if user has any order in Active Order database
                                     if(o.getCustomer().matches(currentUser.getUid())){
                                         showOrderAlert(chatPath);
                                     }
@@ -486,6 +548,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 });
     }
 
+    /**
+     * Displays alert to user letting them know their order is being fulfilled
+     * @param chatPath reference to chat location in database
+     */
     public void showOrderAlert(final String chatPath){
         TextView alert = (TextView) findViewById(R.id.alert);
         alert.setVisibility(View.VISIBLE);

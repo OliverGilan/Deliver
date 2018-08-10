@@ -113,7 +113,6 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
         Intent intent = getIntent();
         if(intent.hasExtra("ref")){
             orderRef = intent.getExtras().getString("ref");
-            Log.i("PATH", orderRef);
         }
         DocumentReference order = database.document(orderRef);
         order.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -278,7 +277,6 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 destination = new LatLng((double)documentSnapshot.get("latitude"), (double)documentSnapshot.get("longitude"));
-                Log.i("PATH", "latitude:" + documentSnapshot.get("latitude").toString() + " Destination: " + destination.toString());
                 if(destination != null){
                     drawNavRoute(serverKey, start, destination);
                     zoomToFit(start, destination);
@@ -292,7 +290,6 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void drawNavRoute(String key, LatLng start, final LatLng destination){
-        Log.i("PATH", "ACTIVATED: " + destination.toString());
         GoogleDirection.withServerKey(key)
                 .from(start)
                 .to(destination)
@@ -308,7 +305,6 @@ public class DeliverOrder extends AppCompatActivity implements OnMapReadyCallbac
                         final ArrayList<LatLng> directionPositionList = leg.getDirectionPoint();
                         PolylineOptions polylineOptions = DirectionConverter.createPolyline(DeliverOrder.this, directionPositionList, 8, Color.BLUE);
                         initialPoly = map.addPolyline(polylineOptions);
-                        Log.i("PATH", rawBody);
                         startNavBtn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {

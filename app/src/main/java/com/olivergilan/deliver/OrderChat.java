@@ -105,7 +105,6 @@ public class OrderChat extends AppCompatActivity {
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
                         chatData = document.toObject(ChatData.class);
-                        Log.i("CHAT", chatData.getHead().toString());
                         adapter = new ChatAdapter(OrderChat.this, chatData);
                         chatList.setAdapter(adapter);
                     } else {

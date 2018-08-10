@@ -100,8 +100,6 @@ public class SignUp extends AppCompatActivity{
             this.password.requestFocus();
             return;
         }
-        //Toast.makeText(getApplicationContext(), "Email: " + email, Toast.LENGTH_SHORT).show();
-        //Toast.makeText(getApplicationContext(), "pw: " + password, Toast.LENGTH_SHORT).show();
         progressbar.setVisibility(View.VISIBLE);
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(SignUp.this, new OnCompleteListener<AuthResult>() {
@@ -114,24 +112,19 @@ public class SignUp extends AppCompatActivity{
                                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
-                                            Log.i("USER", username + " : " + user.getDisplayName());
-//                                          mRef.child(user.getUid()).setValue(user);
                                             db.collection("users")
                                                     .document(user.getUid())
                                                     .set(user);
                                         }
                                     });
 
-                            //mRef.child(user.getUid()).child("name").setValue(name);
                             user.sendEmailVerification().addOnCompleteListener(SignUp.this, new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
                                     Toast.makeText(getApplicationContext(), "Verification Email Sent", Toast.LENGTH_SHORT).show();
                                 }
                             });
-//                            String mName = name.getText().toString().trim();
                             Intent intent = new Intent(SignUp.this, MainActivity.class);
-//                            intent.putExtra("username", mName);
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                             startActivity(intent);
                         }else{
