@@ -413,6 +413,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
                         userOrder.setTag(order);
                         userOrder.showInfoWindow();
+                        map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+                            @Override
+                            public void onInfoWindowClick(Marker marker) {
+                                return;
+                            }
+                        });
                     } else {
                         Log.d("Order Focus", "No such document");
                     }
